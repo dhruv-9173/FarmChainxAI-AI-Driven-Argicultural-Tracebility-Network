@@ -1,0 +1,751 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  width: 90%;
+  max-width: 740px;
+  max-height: 88vh;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 28px 28px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+
+.headerRight {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.qrMini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.qrMini img {
+  width: 76px;
+  height: 76px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.qrMini span {
+  font-size: 10px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.batchId {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.batchMeta {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.batchSub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.badgeStatus {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.badgeGreen {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 14px;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* ── Quick Metrics ── */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 10px;
+  background: #fff;
+  text-align: center;
+}
+
+.metricLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.metricValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ── Tabs ── */
+.tabBar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 28px;
+  flex-shrink: 0;
+}
+
+.tabBtn {
+  padding: 14px 18px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  color: #111827;
+}
+
+.tabActive {
+  color: #16a34a;
+  border-bottom-color: #16a34a;
+  font-weight: 600;
+}
+
+.tabContent {
+  padding: 24px 28px 28px;
+  overflow-y: auto;
+}
+
+/* ── Info Tab ── */
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.infoValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  text-align: right;
+}
+
+/* ── Supply Chain Tab ── */
+.timeline {
+  position: relative;
+}
+
+.blockchainBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.scStep {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 0;
+}
+
+.scLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.scIconCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.scIcon {
+  font-size: 18px;
+}
+
+.scLine {
+  width: 2px;
+  flex: 1;
+  min-height: 24px;
+  margin: 4px 0;
+}
+
+.scCard {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.scLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.scName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.scSub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.scDetail {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.scStatus {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── Price Tab ── */
+.priceCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.priceCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.priceLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+.priceValue {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.insightBox {
+  padding: 16px 20px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #166534;
+  line-height: 1.7;
+}
+
+.insightBox p {
+  margin: 4px 0;
+}
+
+/* ── AI Tab ── */
+.aiSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aiCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.aiLabel {
+  font-size: 14px;
+  color: #6b7280;
+}
+.aiValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+.aiStatus {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Action Section ── */
+.actionSection {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.actionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px;
+}
+
+.actionBtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actionGreen {
+  padding: 9px 20px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.actionGreen:hover {
+  background: #15803d;
+}
+
+.actionRed {
+  padding: 9px 20px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.actionRed:hover {
+  background: #dc2626;
+}
+
+.actionCyan {
+  padding: 9px 20px;
+  background: #0891b2;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.actionCyan:hover {
+  background: #0e7490;
+}
+
+.actionGrey {
+  padding: 9px 20px;
+  background: #6b7280;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.actionGrey:hover {
+  background: #4b5563;
+}
+
+/* ── Rate Supplier Tab ── */
+.rateSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.supplierCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.supplierIcon {
+  font-size: 2rem;
+  width: 52px;
+  height: 52px;
+  background: #dcfce7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.supplierInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.supplierRole {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.supplierName {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #14532d;
+}
+
+.supplierSub {
+  font-size: 0.78rem;
+  color: #16a34a;
+}
+
+.ratePrompt {
+  font-size: 0.88rem;
+  color: #374151;
+  font-weight: 500;
+  margin: 0;
+}
+
+.starRow {
+  display: flex;
+  gap: 6px;
+}
+
+.starBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 2rem;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: transform 0.1s;
+}
+
+.starBtn:hover {
+  transform: scale(1.15);
+}
+
+.starFilled {
+  color: #f59e0b;
+}
+
+.starEmpty {
+  color: #d1d5db;
+}
+
+.ratingLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #9ca3af;
+  margin-top: -8px;
+}
+
+.ratingSelectedMsg {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #16a34a;
+  margin: 0;
+  text-align: center;
+}
+
+.feedbackArea {
+  width: 100%;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: #374151;
+  resize: none;
+  font-family: inherit;
+  background: #f9fafb;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.feedbackArea:focus {
+  outline: none;
+  border-color: #16a34a;
+  background: #fff;
+}
+
+.feedbackFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.charCount {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.submitRatingBtn {
+  padding: 10px 24px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.submitRatingBtn:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.submitRatingBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Submitted state ── */
+.submitted {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.submittedStars {
+  display: flex;
+  gap: 4px;
+  font-size: 1.8rem;
+}
+
+.submittedMsg {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #16a34a;
+  margin: 0;
+}
+
+.submittedFeedback {
+  font-size: 0.88rem;
+  color: #374151;
+  font-style: italic;
+  margin: 0;
+  max-width: 420px;
+}
+
+.submittedDate {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.editRatingBtn {
+  padding: 7px 18px;
+  background: #fff;
+  color: #374151;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.editRatingBtn:hover {
+  border-color: #6b7280;
+}
+
+@media (max-width: 640px) {
+  .modal {
+    width: 95%;
+    max-height: 92vh;
+    border-radius: 16px;
+  }
+  .metrics {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .priceCards {
+    grid-template-columns: 1fr;
+  }
+  .tabBar {
+    overflow-x: auto;
+    padding: 0 16px;
+  }
+  .tabContent {
+    padding: 20px 16px;
+  }
+  .aiCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .header {
+    padding: 20px 16px 16px;
+  }
+}

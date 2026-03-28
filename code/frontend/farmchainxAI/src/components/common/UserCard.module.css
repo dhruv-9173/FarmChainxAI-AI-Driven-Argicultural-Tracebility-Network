@@ -1,0 +1,289 @@
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+  --green-50: #f0fdf4;
+  --green-400: #4ade80;
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --green-700: #15803d;
+  --earth-50: #fafaf7;
+  --earth-100: #f5f0e8;
+  --earth-200: #e8dcc8;
+  --earth-700: #5c4a2a;
+  --earth-900: #2d1f0e;
+  --ink: #1a1a1a;
+  --ink-light: #4a4a4a;
+  --muted: #8a8a8a;
+  --border: #e2ddd4;
+  --surface: #ffffff;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --font-body: "DM Sans", "Helvetica Neue", sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Card ───────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  /* Full-height flex column so the button always pins to the bottom */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--green-500);
+  transform: translateY(-4px);
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  /* fixed height so every card header is the same size */
+  flex-shrink: 0;
+}
+
+.profileImage {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--earth-100);
+  border: 1.5px solid var(--earth-200);
+}
+
+.profileImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.defaultAvatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 24px;
+  font-family: var(--font-display);
+}
+
+.basicInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--earth-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.role {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+.verified {
+  background-color: var(--green-50);
+  color: var(--green-700);
+  border: 1px solid var(--green-400);
+}
+
+.unverified {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ── Role-specific info ─────────────────────────────── */
+/* Fixed min-height so cards without certain fields don't collapse */
+.roleSpecific {
+  padding: 12px 0;
+  border-top: 1.5px solid var(--earth-100);
+  border-bottom: 1.5px solid var(--earth-100);
+  flex-shrink: 0;
+  min-height: 72px;
+}
+
+.label {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--earth-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.location,
+.crops,
+.email {
+  margin: 4px 0;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+/* ── Stats ──────────────────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background: var(--earth-50);
+  border: 1px solid var(--earth-200);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.statItem .label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.statItem .value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green-700);
+}
+
+/* ── Contact ────────────────────────────────────────── */
+.contact {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.contact span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+/* ── Spacer — absorbs leftover height ───────────────── */
+/* Placed between contact and button so the button always sits at the bottom */
+.spacer {
+  flex: 1;
+}
+
+/* ── View button ────────────────────────────────────── */
+.viewButton {
+  /* mt-auto equivalent via spacer above; keep button fixed at bottom */
+  flex-shrink: 0;
+  padding: 10px 16px;
+  background-color: var(--green-600);
+  color: var(--surface);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  width: 100%;
+  letter-spacing: 0.3px;
+  box-shadow: var(--shadow-sm);
+}
+
+.viewButton:hover {
+  background-color: var(--green-700);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.viewButton:active {
+  background-color: #1a4d2e;
+  transform: translateY(0);
+}
+
+.viewButton:disabled {
+  background-color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .header {
+    gap: 12px;
+  }
+
+  .profileImage {
+    width: 56px;
+    height: 56px;
+  }
+
+  .name {
+    font-size: 15px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .viewButton {
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+}

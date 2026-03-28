@@ -1,0 +1,307 @@
+/* ── Tokens ─────────────────────────────────────────────── */
+:root {
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+  --green-400: #4ade80;
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --green-700: #15803d;
+  --earth-50: #fafaf7;
+  --earth-100: #f5f0e8;
+  --earth-200: #e8dcc8;
+  --earth-300: #d4bf9e;
+  --earth-700: #5c4a2a;
+  --earth-900: #2d1f0e;
+  --ink: #1a1a1a;
+  --ink-light: #4a4a4a;
+  --muted: #8a8a8a;
+  --border: #e2ddd4;
+  --surface: #ffffff;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "DM Sans", "Helvetica Neue", sans-serif;
+  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Google Fonts import (display + body) ──────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap");
+
+/* ── Page container ────────────────────────────────────── */
+.container {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--earth-50);
+  min-height: 100vh;
+  padding: 40px 32px 64px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.header {
+  margin-bottom: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 3px solid var(--green-500);
+  padding-left: 16px;
+}
+
+.header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--earth-900);
+  line-height: 1.15;
+  letter-spacing: -0.3px;
+}
+
+.header p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+/* ── Search ────────────────────────────────────────────── */
+.searchContainer {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  pointer-events: none;
+  opacity: 0.55;
+  line-height: 1;
+}
+
+.searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 16px 13px 42px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.searchInput::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12), var(--shadow-sm);
+}
+
+/* ── Result info ───────────────────────────────────────── */
+.resultInfo {
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  min-height: 20px;
+}
+
+.resultInfo strong {
+  font-weight: 600;
+  color: var(--green-700);
+}
+
+.noResults {
+  color: #b45309;
+}
+
+/* ── Error ─────────────────────────────────────────────── */
+.errorMessage {
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+  color: #92400e;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* ── Loading ───────────────────────────────────────────── */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  gap: 18px;
+}
+
+.spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid var(--earth-200);
+  border-top-color: var(--green-500);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingContainer p {
+  color: var(--muted);
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Grid ──────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+/* ── Card wrapper ──────────────────────────────────────── */
+.cardWrapper {
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: transform var(--transition), box-shadow var(--transition);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  /* stretch to fill the grid cell so all cards share the same height */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Pass the full height down to UserCard */
+.cardWrapper > * {
+  flex: 1;
+  height: 100%;
+}
+
+.cardWrapper:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.cardWrapper:focus-visible {
+  outline-color: var(--green-500);
+}
+
+/* ── Empty state ───────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 24px;
+  gap: 14px;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--earth-300);
+  border-radius: var(--radius-lg);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  line-height: 1;
+  filter: grayscale(0.2);
+}
+
+.emptyState h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--earth-900);
+}
+
+.emptyState p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px 48px;
+  }
+
+  .header {
+    margin-bottom: 24px;
+  }
+
+  .header h1 {
+    font-size: 26px;
+  }
+
+  .searchContainer {
+    margin-bottom: 14px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .emptyIcon {
+    font-size: 38px;
+  }
+
+  .emptyState h3 {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+  }
+
+  .emptyState {
+    padding: 48px 16px;
+  }
+}

@@ -1,0 +1,367 @@
+/**
+ * PublicBatchTracker.module.css
+ * Styles for public batch tracking component
+ */
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+  padding-top: 20px;
+}
+
+.header h1 {
+  font-size: 48px;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}
+
+.header p {
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.searchForm {
+  max-width: 600px;
+  margin: 0 auto 40px;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 50px;
+  overflow: hidden;
+  background: white;
+  padding: 5px;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  outline: none;
+  background: transparent;
+
+  &::placeholder {
+    color: #ccc;
+  }
+}
+
+.searchBtn {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 50px;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.noResults {
+  max-width: 600px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  color: #d32f2f;
+  font-size: 16px;
+}
+
+.trackingResult {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.batchInfo {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 20px;
+}
+
+.batchInfo h2 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 28px;
+}
+
+.verificationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+  border-radius: 20px;
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.verifiedIcon {
+  font-size: 20px;
+}
+
+.unverifiedIcon {
+  font-size: 20px;
+}
+
+.journey {
+  margin: 30px 0;
+}
+
+.journey h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.stageContainer {
+  position: relative;
+  padding: 20px 0;
+}
+
+.stop {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.stop:last-child .connector {
+  display: none;
+}
+
+.stopNumber {
+  min-width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.stopContent {
+  flex: 1;
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #333;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.emoji {
+  font-size: 24px;
+}
+
+.stageName {
+  text-transform: uppercase;
+  color: #667eea;
+}
+
+.stopDetails {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.stopDetails p {
+  margin: 5px 0;
+}
+
+.timestamp,
+.location,
+.handler,
+.quality {
+  margin: 8px 0;
+}
+
+.timestamp::before {
+  content: "📅 ";
+}
+
+.location::before {
+  content: "📍 ";
+}
+
+.handler::before {
+  content: "👤 ";
+}
+
+.quality::before {
+  content: "⭐ ";
+}
+
+.handler strong,
+.quality strong {
+  color: #333;
+}
+
+.connector {
+  position: absolute;
+  left: 24px;
+  top: 50px;
+  width: 2px;
+  height: 30px;
+  background: linear-gradient(to bottom, #667eea, transparent);
+}
+
+.trustBadge {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border: 2px solid #4caf50;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 30px;
+}
+
+.trustContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  color: #2e7d32;
+}
+
+.lockIcon {
+  font-size: 32px;
+}
+
+.trustContent h4 {
+  margin: 0 0 5px 0;
+  color: #1b5e20;
+  font-size: 16px;
+}
+
+.trustContent p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.info {
+  max-width: 800px;
+  margin: 0 auto 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.infoSection {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.infoSection h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.infoSection ol,
+.infoSection ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.infoSection li {
+  margin: 10px 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.footer {
+  text-align: center;
+  color: white;
+  margin-top: 40px;
+  padding-bottom: 20px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 32px;
+  }
+
+  .header p {
+    font-size: 14px;
+  }
+
+  .inputGroup {
+    flex-direction: column;
+  }
+
+  .searchBtn {
+    width: 100%;
+  }
+
+  .batchInfo h2 {
+    font-size: 22px;
+  }
+
+  .stop {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .stopNumber {
+    position: absolute;
+    left: -35px;
+    top: 0;
+  }
+
+  .stopContent {
+    margin-left: 40px;
+  }
+
+  .trustContent {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .info {
+    grid-template-columns: 1fr;
+  }
+}

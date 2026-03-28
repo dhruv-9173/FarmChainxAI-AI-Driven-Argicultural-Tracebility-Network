@@ -1,0 +1,204 @@
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.totalBadge {
+  padding: 5px 14px;
+  border-radius: 99px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Pipeline */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.stageWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.stageBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 2px solid;
+  border-radius: 12px;
+  min-width: 82px;
+  transition: transform 0.15s;
+}
+
+.stageBox:hover {
+  transform: translateY(-2px);
+}
+
+.stageIcon {
+  font-size: 20px;
+}
+
+.stageCount {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.stageLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.arrow {
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+}
+
+/* Rejected row */
+.rejectedRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.rejectedIcon {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.rejectedText {
+  font-size: 13px;
+  color: #374151;
+  flex: 1;
+}
+
+.rejectedText strong {
+  color: #ef4444;
+}
+
+.rejectedBadge {
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Stats grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.statCard {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border-left: 3px solid;
+}
+
+.statLabel {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.statValue {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* Storage */
+.storageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.storageLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.storageLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.storagePercent {
+  font-size: 14px;
+  font-weight: 800;
+  color: #f59e0b;
+}
+
+.storageBarBg {
+  height: 8px;
+  border-radius: 99px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.storageBarFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+.storageNote {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+}

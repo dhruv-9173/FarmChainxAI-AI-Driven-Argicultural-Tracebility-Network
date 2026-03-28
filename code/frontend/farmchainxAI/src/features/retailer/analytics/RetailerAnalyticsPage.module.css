@@ -1,0 +1,459 @@
+.page {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.breadLink {
+  background: none;
+  border: none;
+  color: #16a34a;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+}
+
+.breadLink:hover {
+  text-decoration: underline;
+}
+
+.breadSep {
+  color: #d1d5db;
+}
+
+.pageHead {
+  margin-bottom: 20px;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.pageSub {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* KPI Row */
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1100px) {
+  .kpiRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.kpiCard {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  border-top: 4px solid transparent;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.kpiIcon {
+  font-size: 22px;
+}
+
+.kpiVal {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.kpiLbl {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Charts */
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chartCard {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.chartHead {
+  margin-bottom: 16px;
+}
+
+.chartTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 2px;
+}
+
+.chartSub {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chartBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 160px;
+}
+
+.chartGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.barGroup {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 100%;
+  justify-content: center;
+}
+
+.bar {
+  flex: 1;
+  max-width: 20px;
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  transition: height 0.5s ease;
+}
+
+.barLabel {
+  font-size: 10px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.chartLegend {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Bottom Row */
+.bottomRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .bottomRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .bottomRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.analyticsCard {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.cardHead {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 2px;
+}
+
+.cardSub {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.empty {
+  padding: 30px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+/* Shelf Life */
+.shelfList {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shelfRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shelfInfo {
+  display: flex;
+  flex-direction: column;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.shelfCrop {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.shelfDays {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.shelfBarOuter {
+  flex: 1;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.shelfBarInner {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.shelfPct {
+  font-size: 11px;
+  font-weight: 700;
+  width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.shelfSummary {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+.shelfStat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: #6b7280;
+  border-right: 1px solid #f3f4f6;
+}
+
+.shelfStat:last-child {
+  border-right: none;
+}
+
+.shelfStatDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Category */
+.categoryList {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.categoryRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.categoryName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.categoryBarOuter {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.categoryBarInner {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.categoryCount {
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  width: 20px;
+  text-align: right;
+}
+
+/* Source / Donut */
+.sourceWrap {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.donutWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.donutOuter {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.donut {
+  width: 120px;
+  height: 120px;
+  transform: rotate(-90deg);
+}
+
+.donutCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donutTotal {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.donutLbl {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.sourceList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.sourceItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sourceDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.sourceLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sourceVal {
+  font-size: 11px;
+  color: #6b7280;
+}

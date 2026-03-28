@@ -1,0 +1,43 @@
+.page {
+  min-height: 100vh;
+  background: #f9fafb;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  padding: 28px 32px 0;
+}
+
+.tableArea {
+  min-width: 0;
+}
+
+.tableArea > div {
+  padding: 0;
+}
+
+.activityArea {
+  min-width: 0;
+}
+
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 28px 32px 40px;
+}
+
+@media (max-width: 1200px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+    padding: 24px 16px 0;
+  }
+
+  .analyticsGrid {
+    grid-template-columns: 1fr;
+    padding: 24px 16px 40px;
+  }
+}
