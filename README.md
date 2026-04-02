@@ -181,7 +181,7 @@ This project is developed as part of **INFOSYS SPRINGBOARD INTERNSHIP — Java B
 ---
 
 ## Credits / Contributors
-- Maintained by: **dhruv-9173** (add team member names here if applicable)
+- Maintained by: **dhruv-9173** 
 
 ---
 
