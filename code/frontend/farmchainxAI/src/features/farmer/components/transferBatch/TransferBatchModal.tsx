@@ -290,11 +290,6 @@ export default function TransferBatchModal({
     setSubmitError("");
 
     try {
-      const normalizedPrice = Number(transferPrice);
-      if (!Number.isFinite(normalizedPrice) || normalizedPrice <= 0) {
-        throw new Error("Enter a valid transfer price greater than 0.");
-      }
-
       const recipientRole = toTransferRole(recipientType);
       if (selectedRecipient.role !== recipientRole) {
         throw new Error(
@@ -307,7 +302,6 @@ export default function TransferBatchModal({
         recipientId: selectedRecipient.id,
         recipientRole,
         note: note.trim() || undefined,
-        transferPrice: normalizedPrice,
       });
       onTransferComplete(response, selectedRecipient);
       setTransferResult(response);
@@ -471,8 +465,6 @@ export default function TransferBatchModal({
                     recipientType={recipientType}
                     note={note}
                     onNoteChange={setNote}
-                    transferPrice={transferPrice}
-                    onTransferPriceChange={setTransferPrice}
                   />
                 )}
               {submitError && (
