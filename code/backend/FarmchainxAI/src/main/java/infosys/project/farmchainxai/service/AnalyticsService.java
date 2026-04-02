@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -279,5 +281,239 @@ public class AnalyticsService {
                 "rejectedBatches", rejectedBatches,
                 "completionRate", String.format("%.2f", completionRate) + "%"
         );
+    }
+
+    /**
+     * Farmer-facing baseline predictive analytics.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getFarmerPredictiveInsights() {
+        List<Batch> allBatches = batchRepository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Batch> qualitySamples = allBatches.stream()
+                .filter(b -> b.getQualityScore() != null && b.getCreatedAt() != null)
+                .sorted(Comparator.comparing(Batch::getCreatedAt))
+                .collect(Collectors.toList());
+
+        List<Map<String, Object>> qualityForecast = new ArrayList<>();
+        int qualityLookback = Math.min(6, qualitySamples.size());
+        if (qualityLookback > 0) {
+            List<Batch> recent = qualitySamples.subList(qualitySamples.size() - qualityLookback, qualitySamples.size());
+            double avgQuality = recent.stream().mapToInt(Batch::getQualityScore).average().orElse(0);
+            double slope = computeSimpleSlope(recent.stream().map(Batch::getQualityScore).collect(Collectors.toList()));
+
+            for (int i = 0; i < recent.size(); i++) {
+                Batch b = recent.get(i);
+                double predicted = clamp(avgQuality + slope * (i + 1), 0, 100);
+                qualityForecast.add(Map.of(
+                        "label", b.getCreatedAt().toLocalDate().toString(),
+                        "actual", b.getQualityScore(),
+                        "predicted", round2(predicted)
+                ));
+            }
+        }
+
+        long highRiskBatches = allBatches.stream()
+                .filter(b -> b.getCurrentShelfLifeDays() != null && b.getCurrentShelfLifeDays() <= 2)
+                .count();
+
+        double avgRemainingShelfLife = allBatches.stream()
+                .filter(b -> b.getCurrentShelfLifeDays() != null)
+                .mapToInt(Batch::getCurrentShelfLifeDays)
+                .average()
+                .orElse(0);
+
+        String shelfLifeRiskLevel;
+        if (highRiskBatches >= 20) {
+            shelfLifeRiskLevel = "HIGH";
+        } else if (highRiskBatches >= 8) {
+            shelfLifeRiskLevel = "MEDIUM";
+        } else {
+            shelfLifeRiskLevel = "LOW";
+        }
+
+        Map<String, Object> shelfLifeRisk = Map.of(
+                "highRiskBatches", highRiskBatches,
+                "avgRemainingShelfLifeDays", round2(avgRemainingShelfLife),
+                "riskLevel", shelfLifeRiskLevel,
+                "confidence", 0.72
+        );
+
+        Map<YearMonth, Long> createdByMonth = allBatches.stream()
+                .filter(b -> b.getCreatedAt() != null)
+                .collect(Collectors.groupingBy(
+                        b -> YearMonth.from(b.getCreatedAt()),
+                        TreeMap::new,
+                        Collectors.counting()
+                ));
+
+        List<Map<String, Object>> demandTrend = new ArrayList<>();
+        List<Long> demandSeries = new ArrayList<>(createdByMonth.values());
+        double baselineDemand = demandSeries.stream().mapToLong(v -> v).average().orElse(0);
+        double demandSlope = computeSimpleSlope(demandSeries);
+
+        int idx = 1;
+        for (Map.Entry<YearMonth, Long> entry : createdByMonth.entrySet()) {
+            double forecast = Math.max(0, baselineDemand + (demandSlope * idx));
+            demandTrend.add(Map.of(
+                    "month", entry.getKey().toString(),
+                    "actual", entry.getValue(),
+                    "forecast", round2(forecast)
+            ));
+            idx++;
+        }
+
+        for (int i = 1; i <= 3; i++) {
+            YearMonth next = YearMonth.now().plusMonths(i);
+            double forecast = Math.max(0, baselineDemand + (demandSlope * (demandTrend.size() + i)));
+            demandTrend.add(Map.of(
+                    "month", next.toString(),
+                    "actual", 0,
+                    "forecast", round2(forecast)
+            ));
+        }
+
+        return Map.of(
+                "qualityForecast", qualityForecast,
+                "shelfLifeRisk", shelfLifeRisk,
+                "demandTrend", demandTrend,
+                "modelVersion", "baseline-regression-v1",
+                "generatedAt", now.toString(),
+                "confidence", 0.74
+        );
+    }
+
+    /**
+     * Distributor-facing baseline predictive analytics.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getDistributorPredictiveInsights() {
+        List<Batch> allBatches = batchRepository.findAll();
+        List<SupplyChainEvent> allEvents = supplyChainEventRepository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+
+        Map<String, List<SupplyChainEvent>> eventsByBatch = allEvents.stream()
+                .filter(e -> e.getBatchId() != null && e.getTimestamp() != null)
+                .collect(Collectors.groupingBy(SupplyChainEvent::getBatchId));
+
+        List<Long> transitHours = new ArrayList<>();
+        for (List<SupplyChainEvent> batchEvents : eventsByBatch.values()) {
+            Optional<LocalDateTime> inTransitAt = batchEvents.stream()
+                    .filter(e -> e.getStage() == SupplyChainEvent.SupplyChainStage.IN_TRANSIT)
+                    .map(SupplyChainEvent::getTimestamp)
+                    .min(LocalDateTime::compareTo);
+            Optional<LocalDateTime> receivedAt = batchEvents.stream()
+                    .filter(e -> e.getStage() == SupplyChainEvent.SupplyChainStage.RECEIVED)
+                    .map(SupplyChainEvent::getTimestamp)
+                    .min(LocalDateTime::compareTo);
+
+            if (inTransitAt.isPresent() && receivedAt.isPresent() && !receivedAt.get().isBefore(inTransitAt.get())) {
+                transitHours.add(ChronoUnit.HOURS.between(inTransitAt.get(), receivedAt.get()));
+            }
+        }
+
+        double avgTransitHours = transitHours.stream().mapToLong(v -> v).average().orElse(0);
+        long delayedTransfers = transitHours.stream().filter(h -> h > 24).count();
+        double lateProbability = transitHours.isEmpty() ? 0 : (delayedTransfers * 100.0) / transitHours.size();
+        String delayRisk = lateProbability >= 40 ? "HIGH" : lateProbability >= 20 ? "MEDIUM" : "LOW";
+
+        Map<String, Object> transferDelayRisk = Map.of(
+                "avgTransitHours", round2(avgTransitHours),
+                "lateTransferProbabilityPct", round2(lateProbability),
+                "riskLevel", delayRisk,
+                "recommendedBufferHours", Math.max(6, Math.round(avgTransitHours * 0.25)),
+                "confidence", 0.7
+        );
+
+        List<Integer> qualitySeries = allBatches.stream()
+                .filter(b -> b.getQualityScore() != null)
+                .sorted(Comparator.comparing(Batch::getUpdatedAt, Comparator.nullsLast(LocalDateTime::compareTo)))
+                .map(Batch::getQualityScore)
+                .collect(Collectors.toList());
+
+        double qualityBaseline = qualitySeries.stream().mapToInt(v -> v).average().orElse(0);
+        double qualitySlope = computeSimpleSlope(qualitySeries);
+        double nextWeekQuality = clamp(qualityBaseline + (qualitySlope * 1.5), 0, 100);
+        double nextMonthQuality = clamp(qualityBaseline + (qualitySlope * 4.0), 0, 100);
+
+        Map<String, Object> qualityDeclineForecast = Map.of(
+                "currentAvgQuality", round2(qualityBaseline),
+                "predictedQualityNext7Days", round2(nextWeekQuality),
+                "predictedQualityNext30Days", round2(nextMonthQuality),
+                "trend", qualitySlope < -0.25 ? "DECLINING" : qualitySlope > 0.25 ? "IMPROVING" : "STABLE"
+        );
+
+        Map<YearMonth, Long> demandByMonth = allEvents.stream()
+                .filter(e -> e.getStage() == SupplyChainEvent.SupplyChainStage.RECEIVED && e.getTimestamp() != null)
+                .collect(Collectors.groupingBy(
+                        e -> YearMonth.from(e.getTimestamp()),
+                        TreeMap::new,
+                        Collectors.counting()
+                ));
+
+        List<Map<String, Object>> demandTrend = new ArrayList<>();
+        List<Long> demandSeries = new ArrayList<>(demandByMonth.values());
+        double demandBaseline = demandSeries.stream().mapToLong(v -> v).average().orElse(0);
+        double demandSlope = computeSimpleSlope(demandSeries);
+
+        int idx = 1;
+        for (Map.Entry<YearMonth, Long> entry : demandByMonth.entrySet()) {
+            double forecast = Math.max(0, demandBaseline + (demandSlope * idx));
+            demandTrend.add(Map.of(
+                    "month", entry.getKey().toString(),
+                    "actual", entry.getValue(),
+                    "forecast", round2(forecast)
+            ));
+            idx++;
+        }
+
+        for (int i = 1; i <= 3; i++) {
+            YearMonth next = YearMonth.now().plusMonths(i);
+            double forecast = Math.max(0, demandBaseline + (demandSlope * (demandTrend.size() + i)));
+            demandTrend.add(Map.of(
+                    "month", next.toString(),
+                    "actual", 0,
+                    "forecast", round2(forecast)
+            ));
+        }
+
+        return Map.of(
+                "transferDelayRisk", transferDelayRisk,
+                "qualityDeclineForecast", qualityDeclineForecast,
+                "demandTrend", demandTrend,
+                "modelVersion", "baseline-regression-v1",
+                "generatedAt", now.toString(),
+                "confidence", 0.71
+        );
+    }
+
+    private double computeSimpleSlope(List<? extends Number> values) {
+        if (values == null || values.size() < 2) {
+            return 0;
+        }
+
+        int n = values.size();
+        double xMean = (n - 1) / 2.0;
+        double yMean = values.stream().mapToDouble(Number::doubleValue).average().orElse(0);
+
+        double numerator = 0;
+        double denominator = 0;
+        for (int i = 0; i < n; i++) {
+            double x = i - xMean;
+            double y = values.get(i).doubleValue() - yMean;
+            numerator += x * y;
+            denominator += x * x;
+        }
+
+        return denominator == 0 ? 0 : numerator / denominator;
+    }
+
+    private double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private double round2(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 }

@@ -220,6 +220,28 @@ export default function ConsumerDashboard() {
 
   const availableCount = products.length;
   const ownedCount = myBatches.length;
+  const avgAvailableQuality = useMemo(() => {
+    const qualityValues = products
+      .map((item) => item.qualityScore)
+      .filter((score): score is number => typeof score === "number");
+    if (qualityValues.length === 0) return null;
+    return Math.round(
+      qualityValues.reduce((sum, score) => sum + score, 0) /
+        qualityValues.length
+    );
+  }, [products]);
+
+  const avgAvailablePrice = useMemo(() => {
+    const prices = products
+      .map((item) => item.pricePerUnit)
+      .filter((price): price is number => typeof price === "number");
+    if (prices.length === 0) return null;
+    return (
+      Math.round(
+        (prices.reduce((sum, price) => sum + price, 0) / prices.length) * 100
+      ) / 100
+    );
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -249,247 +271,311 @@ export default function ConsumerDashboard() {
     return `${firstName}'s Consumer Dashboard`;
   }, [user?.fullName]);
 
+  const qualityBand = (score?: number) => {
+    if (typeof score !== "number") return "Unknown";
+    if (score >= 85) return "Excellent";
+    if (score >= 70) return "Good";
+    if (score >= 55) return "Moderate";
+    return "Low";
+  };
+
+  const qualityMeterClass = (score?: number) => {
+    if (typeof score !== "number") return styles.qualityMeterUnknown;
+    if (score >= 85) return styles.qualityMeterExcellent;
+    if (score >= 70) return styles.qualityMeterGood;
+    if (score >= 55) return styles.qualityMeterModerate;
+    return styles.qualityMeterLow;
+  };
+
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.kicker}>FarmChainX</p>
-          <h1 className={styles.title}>{title}</h1>
-          <p className={styles.subtitle}>
-            Browse retailer-available products, then open live traceability for
-            any product.
-          </p>
-        </div>
-        <div className={styles.headerActions}>
-          <div className={styles.counterCard}>
-            <span className={styles.counterLabel}>Available Products</span>
-            <strong className={styles.counterValue}>{availableCount}</strong>
+      <div className={styles.dashboardShell}>
+        <header className={styles.header}>
+          <div className={styles.heroBlock}>
+            <p className={styles.kicker}>FarmChainX</p>
+            <h1 className={styles.title}>{title}</h1>
+            <p className={styles.subtitle}>
+              Browse retailer-available products, then open live traceability
+              for any product.
+            </p>
           </div>
-          <div className={styles.counterCard}>
-            <span className={styles.counterLabel}>Your Batches</span>
-            <strong className={styles.counterValue}>{ownedCount}</strong>
-          </div>
-          <button className={styles.logoutBtn} onClick={logout}>
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {!loading && !error && (
-        <section className={styles.sectionWrap}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>YOUR BATCHES</h2>
-            <span className={styles.sectionMeta}>{ownedCount} total</span>
-          </div>
-
-          {myBatches.length === 0 ? (
-            <div className={styles.emptyCard}>
-              <h2>No owned batches found</h2>
-              <p>
-                This section shows all batches where ownerId matches your
-                consumer account.
-              </p>
+          <div className={styles.headerActions}>
+            <div className={styles.counterCard}>
+              <span className={styles.counterLabel}>Available Products</span>
+              <strong className={styles.counterValue}>{availableCount}</strong>
             </div>
-          ) : (
-            <section className={styles.grid}>
-              {myBatches.map((batch) => {
-                const location = [batch.farmCity, batch.farmState]
-                  .filter(Boolean)
-                  .join(", ");
-
-                return (
-                  <article key={batch.id} className={styles.card}>
-                    {batch.cropImageUrl ? (
-                      <img
-                        src={batch.cropImageUrl}
-                        alt={`${batch.cropType} batch`}
-                        className={styles.productImage}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className={styles.imageFallback}>
-                        No image available
-                      </div>
-                    )}
-
-                    <div className={styles.cardTop}>
-                      <div>
-                        <span className={styles.batchCode}>{batch.id}</span>
-                        <h2 className={styles.cropName}>
-                          {batch.cropType}
-                          {batch.variety ? ` · ${batch.variety}` : ""}
-                        </h2>
-                      </div>
-                      {batch.status && (
-                        <span className={styles.statusPill}>
-                          {batch.status}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className={styles.metricsRow}>
-                      <span>
-                        Qty: {batch.quantity ?? "-"} {batch.quantityUnit ?? ""}
-                      </span>
-                      <span>Quality: {batch.qualityScore ?? "-"}/100</span>
-                      <span>Storage: {batch.storageType ?? "-"}</span>
-                      <span>
-                        Price:{" "}
-                        {batch.pricePerUnit ? `INR ${batch.pricePerUnit}` : "-"}
-                      </span>
-                    </div>
-
-                    <div className={styles.retailerBox}>
-                      <p className={styles.retailerHeading}>Farm origin</p>
-                      <p>{location || "Location not provided"}</p>
-                    </div>
-
-                    <button
-                      className={styles.traceBtn}
-                      onClick={() => navigate(`/batch/${batch.id}`)}
-                    >
-                      Open QR Scanned Page
-                    </button>
-                  </article>
-                );
-              })}
-            </section>
-          )}
-        </section>
-      )}
-
-      {loading && (
-        <p className={styles.stateText}>Loading available products...</p>
-      )}
-      {!loading && error && <p className={styles.errorText}>{error}</p>}
-
-      {!loading && !error && products.length === 0 && (
-        <div className={styles.emptyCard}>
-          {debouncedSearch ? (
-            <>
-              <h2>No matching products found</h2>
-              <p>Try a different keyword to find products faster.</p>
-            </>
-          ) : (
-            <>
-              <h2>No products are marked available yet</h2>
-              <p>
-                Once retailers mark inventory as available, products will appear
-                here with shop details.
-              </p>
-            </>
-          )}
-        </div>
-      )}
-
-      {!loading && !error && products.length > 0 && (
-        <>
-          <div className={styles.searchRow}>
-            <input
-              type="search"
-              className={styles.searchInput}
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search by product, batch id, retailer, or location"
-              aria-label="Search products"
-            />
-            <span className={styles.searchMeta}>
-              Showing {filteredProducts.length} of {products.length}
-            </span>
-          </div>
-
-          {filteredProducts.length === 0 && (
-            <div className={styles.emptyCard}>
-              <h2>No matching products found</h2>
-              <p>Try a different keyword to find products faster.</p>
+            <div className={styles.counterCard}>
+              <span className={styles.counterLabel}>Your Batches</span>
+              <strong className={styles.counterValue}>{ownedCount}</strong>
             </div>
-          )}
+            <div className={styles.counterCard}>
+              <span className={styles.counterLabel}>Avg Quality</span>
+              <strong className={styles.counterValue}>
+                {avgAvailableQuality !== null
+                  ? `${avgAvailableQuality}/100`
+                  : "-"}
+              </strong>
+            </div>
+            <div className={styles.counterCard}>
+              <span className={styles.counterLabel}>Avg Price / Unit</span>
+              <strong className={styles.counterValue}>
+                {avgAvailablePrice !== null ? `INR ${avgAvailablePrice}` : "-"}
+              </strong>
+            </div>
+            <button className={styles.logoutBtn} onClick={logout}>
+              Logout
+            </button>
+          </div>
+        </header>
 
-          {filteredProducts.length > 0 && (
-            <section className={styles.grid}>
-              {filteredProducts.map((product) => {
-                const location = [
-                  product.retailerAddress,
-                  product.retailerCity,
-                  product.retailerState,
-                ]
-                  .filter(Boolean)
-                  .join(", ");
+        {!loading && !error && (
+          <section className={styles.sectionWrap}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>YOUR BATCHES</h2>
+              <span className={styles.sectionMeta}>{ownedCount} total</span>
+            </div>
 
-                return (
-                  <article key={product.id} className={styles.card}>
-                    {product.cropImageUrl ? (
-                      <img
-                        src={product.cropImageUrl}
-                        alt={`${product.cropType} product`}
-                        className={styles.productImage}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className={styles.imageFallback}>
-                        No image available
-                      </div>
-                    )}
+            {myBatches.length === 0 ? (
+              <div className={styles.emptyCard}>
+                <h2>No owned batches found</h2>
+                <p>
+                  This section shows all batches where ownerId matches your
+                  consumer account.
+                </p>
+              </div>
+            ) : (
+              <section className={styles.grid}>
+                {myBatches.map((batch) => {
+                  const location = [batch.farmCity, batch.farmState]
+                    .filter(Boolean)
+                    .join(", ");
 
-                    <div className={styles.cardTop}>
-                      <div>
-                        <span className={styles.batchCode}>{product.id}</span>
-                        <h2 className={styles.cropName}>
-                          {product.cropType}
-                          {product.variety ? ` · ${product.variety}` : ""}
-                        </h2>
-                      </div>
-                      {product.status && (
-                        <span className={styles.statusPill}>
-                          {product.status}
-                        </span>
+                  return (
+                    <article key={batch.id} className={styles.card}>
+                      {batch.cropImageUrl ? (
+                        <img
+                          src={batch.cropImageUrl}
+                          alt={`${batch.cropType} batch`}
+                          className={styles.productImage}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className={styles.imageFallback}>
+                          No image available
+                        </div>
                       )}
-                    </div>
 
-                    <div className={styles.metricsRow}>
-                      <span>
-                        Qty: {product.quantity ?? "-"}{" "}
-                        {product.quantityUnit ?? ""}
-                      </span>
-                      <span>Quality: {product.qualityScore ?? "-"}/100</span>
-                      <span>
-                        Price:{" "}
-                        {product.pricePerUnit
-                          ? `INR ${product.pricePerUnit}`
-                          : "-"}
-                      </span>
-                    </div>
+                      <div className={styles.cardTop}>
+                        <div>
+                          <span className={styles.batchCode}>{batch.id}</span>
+                          <h2 className={styles.cropName}>
+                            {batch.cropType}
+                            {batch.variety ? ` · ${batch.variety}` : ""}
+                          </h2>
+                        </div>
+                        {batch.status && (
+                          <span className={styles.statusPill}>
+                            {batch.status}
+                          </span>
+                        )}
+                      </div>
 
-                    <div className={styles.retailerBox}>
-                      <p className={styles.retailerHeading}>
-                        Retailer shop details
-                      </p>
-                      <p>
-                        <strong>{product.retailerShopName}</strong> (
-                        {product.retailerName})
-                      </p>
-                      <p>{location || "Location not provided"}</p>
-                      <p>
-                        {product.retailerPhone || "No phone"}
-                        {product.retailerEmail
-                          ? ` · ${product.retailerEmail}`
-                          : ""}
-                      </p>
-                    </div>
+                      <div className={styles.metricsRow}>
+                        <span>
+                          Qty: {batch.quantity ?? "-"}{" "}
+                          {batch.quantityUnit ?? ""}
+                        </span>
+                        <span>Quality: {batch.qualityScore ?? "-"}/100</span>
+                        <span>Storage: {batch.storageType ?? "-"}</span>
+                        <span>
+                          Price:{" "}
+                          {batch.pricePerUnit
+                            ? `INR ${batch.pricePerUnit}`
+                            : "-"}
+                        </span>
+                      </div>
 
-                    <button
-                      className={styles.traceBtn}
-                      onClick={() => navigate(`/batch/${product.id}`)}
-                    >
-                      Open QR Scanned Page
-                    </button>
-                  </article>
-                );
-              })}
-            </section>
-          )}
-        </>
-      )}
+                      <div className={styles.retailerBox}>
+                        <p className={styles.retailerHeading}>Farm origin</p>
+                        <p>{location || "Location not provided"}</p>
+                      </div>
+
+                      <button
+                        className={styles.traceBtn}
+                        onClick={() => navigate(`/batch/${batch.id}`)}
+                      >
+                        Open QR Scanned Page
+                      </button>
+                    </article>
+                  );
+                })}
+              </section>
+            )}
+          </section>
+        )}
+
+        {loading && (
+          <p className={styles.stateText}>Loading available products...</p>
+        )}
+        {!loading && error && <p className={styles.errorText}>{error}</p>}
+
+        {!loading && !error && products.length === 0 && (
+          <div className={styles.emptyCard}>
+            {debouncedSearch ? (
+              <>
+                <h2>No matching products found</h2>
+                <p>Try a different keyword to find products faster.</p>
+              </>
+            ) : (
+              <>
+                <h2>No products are marked available yet</h2>
+                <p>
+                  Once retailers mark inventory as available, products will
+                  appear here with shop details.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
+        {!loading && !error && products.length > 0 && (
+          <>
+            <div className={styles.searchRow}>
+              <input
+                type="search"
+                className={styles.searchInput}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search by product, batch id, retailer, or location"
+                aria-label="Search products"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className={styles.clearSearchBtn}
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear
+                </button>
+              )}
+              <span className={styles.searchMeta}>
+                Showing {filteredProducts.length} of {products.length}
+              </span>
+            </div>
+
+            {filteredProducts.length === 0 && (
+              <div className={styles.emptyCard}>
+                <h2>No matching products found</h2>
+                <p>Try a different keyword to find products faster.</p>
+              </div>
+            )}
+
+            {filteredProducts.length > 0 && (
+              <section className={styles.grid}>
+                {filteredProducts.map((product) => {
+                  const location = [
+                    product.retailerAddress,
+                    product.retailerCity,
+                    product.retailerState,
+                  ]
+                    .filter(Boolean)
+                    .join(", ");
+
+                  return (
+                    <article key={product.id} className={styles.card}>
+                      {product.cropImageUrl ? (
+                        <img
+                          src={product.cropImageUrl}
+                          alt={`${product.cropType} product`}
+                          className={styles.productImage}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className={styles.imageFallback}>
+                          No image available
+                        </div>
+                      )}
+
+                      <div className={styles.cardTop}>
+                        <div>
+                          <span className={styles.batchCode}>{product.id}</span>
+                          <h2 className={styles.cropName}>
+                            {product.cropType}
+                            {product.variety ? ` · ${product.variety}` : ""}
+                          </h2>
+                        </div>
+                        {product.status && (
+                          <span className={styles.statusPill}>
+                            {product.status}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={styles.metricsRow}>
+                        <span>
+                          Qty: {product.quantity ?? "-"}{" "}
+                          {product.quantityUnit ?? ""}
+                        </span>
+                        <span>Quality: {product.qualityScore ?? "-"}/100</span>
+                        <span>
+                          Price:{" "}
+                          {product.pricePerUnit
+                            ? `INR ${product.pricePerUnit}`
+                            : "-"}
+                        </span>
+                      </div>
+
+                      <div className={styles.qualityMeterWrap}>
+                        <div className={styles.qualityMeterHeader}>
+                          <span>Quality band</span>
+                          <span>{qualityBand(product.qualityScore)}</span>
+                        </div>
+                        <div className={styles.qualityMeterTrack}>
+                          <div
+                            className={`${
+                              styles.qualityMeterFill
+                            } ${qualityMeterClass(product.qualityScore)}`}
+                            style={{
+                              width: `${Math.max(
+                                6,
+                                Math.min(product.qualityScore ?? 0, 100)
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className={styles.retailerBox}>
+                        <p className={styles.retailerHeading}>
+                          Retailer shop details
+                        </p>
+                        <p>
+                          <strong>{product.retailerShopName}</strong> (
+                          {product.retailerName})
+                        </p>
+                        <p>{location || "Location not provided"}</p>
+                        <p>
+                          {product.retailerPhone || "No phone"}
+                          {product.retailerEmail
+                            ? ` · ${product.retailerEmail}`
+                            : ""}
+                        </p>
+                      </div>
+
+                      <button
+                        className={styles.traceBtn}
+                        onClick={() => navigate(`/batch/${product.id}`)}
+                      >
+                        Open QR Scanned Page
+                      </button>
+                    </article>
+                  );
+                })}
+              </section>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

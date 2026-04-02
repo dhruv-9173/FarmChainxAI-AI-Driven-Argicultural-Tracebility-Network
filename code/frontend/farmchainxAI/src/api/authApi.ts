@@ -115,8 +115,12 @@ export const registerRequest = async (
   try {
     const res: AxiosResponse<ApiResponseWrapper<PostRegisterResponse>> =
       await apiClient.post("/auth/register", payload);
-    // Extract data from wrapped response
-    return res.data.data;
+    // Extract data from wrapped response, with fallback to top-level message
+    return (
+      res.data.data || {
+        message: res.data.message || "Registration successful",
+      }
+    );
   } catch (error) {
     throw new Error(
       extractMessage(error, "Registration failed. Please try again.")
@@ -143,7 +147,9 @@ export const forgotPasswordRequest = async (
         "/auth/forgot-password",
         buildIdentifierPayload(payload.identifier)
       );
-    return res.data.data;
+    return (
+      res.data.data || { message: res.data.message || "OTP sent successfully" }
+    );
   } catch (error) {
     throw new Error(
       extractMessage(
@@ -165,8 +171,11 @@ export const verifyOtpRequest = async (
         otp: payload.otp,
       });
 
-    const responseData = res.data.data;
-    if (!responseData.resetToken) {
+    const responseData = res.data.data || {
+      message: res.data.message || "OTP verified",
+      resetToken: "",
+    };
+    if (!responseData?.resetToken) {
       throw new Error("OTP verified, but reset token was not returned.");
     }
 
@@ -186,7 +195,11 @@ export const resendOtpRequest = async (
         "/auth/forgot-password",
         buildIdentifierPayload(payload.identifier)
       );
-    return res.data.data;
+    return (
+      res.data.data || {
+        message: res.data.message || "OTP resent successfully",
+      }
+    );
   } catch (error) {
     throw new Error(extractMessage(error, "Failed to resend OTP."));
   }
@@ -202,7 +215,11 @@ export const resetPasswordRequest = async (
         resetToken: payload.resetToken,
         newPassword: payload.newPassword,
       });
-    return res.data.data;
+    return (
+      res.data.data || {
+        message: res.data.message || "Password reset successfully",
+      }
+    );
   } catch (error) {
     throw new Error(
       extractMessage(error, "Failed to reset password. Please try again.")

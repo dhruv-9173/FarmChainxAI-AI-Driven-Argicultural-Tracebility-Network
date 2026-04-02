@@ -141,4 +141,34 @@ public class AnalyticsController {
                     .body(new ApiResponse<>("Failed to retrieve system health: " + e.getMessage(), null, false));
         }
     }
+
+    /**
+     * GET /api/v1/analytics/predictive/farmer
+     * Farmer-facing predictive insights: quality decline, shelf-life risk, demand trend
+     */
+    @GetMapping("/predictive/farmer")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getFarmerPredictiveInsights(Authentication authentication) {
+        try {
+            Map<String, Object> insights = analyticsService.getFarmerPredictiveInsights();
+            return ResponseEntity.ok(new ApiResponse<>("Farmer predictive insights retrieved successfully", insights, true));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Failed to retrieve farmer predictive insights: " + e.getMessage(), null, false));
+        }
+    }
+
+    /**
+     * GET /api/v1/analytics/predictive/distributor
+     * Distributor-facing predictive insights: delays, quality, demand trend
+     */
+    @GetMapping("/predictive/distributor")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDistributorPredictiveInsights(Authentication authentication) {
+        try {
+            Map<String, Object> insights = analyticsService.getDistributorPredictiveInsights();
+            return ResponseEntity.ok(new ApiResponse<>("Distributor predictive insights retrieved successfully", insights, true));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Failed to retrieve distributor predictive insights: " + e.getMessage(), null, false));
+        }
+    }
 }

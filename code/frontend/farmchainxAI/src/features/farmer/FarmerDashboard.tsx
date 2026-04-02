@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type {
   Batch,
+  FarmerPredictiveInsights,
   KPICard,
   ActivityItem,
   QualityTrendPoint,
@@ -22,6 +23,7 @@ import {
   getBatchTransferReceipt,
   type TransferReceiptDto,
 } from "./api/farmerApi";
+import { getFarmerPredictiveInsights } from "../../api/analyticsApi";
 
 import TopNavBar from "./components/TopNavBar";
 import PageHeader from "./components/PageHeader";
@@ -48,6 +50,8 @@ export default function FarmerDashboard() {
   const [kpiCards, setKpiCards] = useState<KPICard[]>([]);
   const [qualityTrends, setQualityTrends] = useState<QualityTrendPoint[]>([]);
   const [shelfLifeItems, setShelfLifeItems] = useState<ShelfLifeItem[]>([]);
+  const [predictiveInsights, setPredictiveInsights] =
+    useState<FarmerPredictiveInsights | null>(null);
   const [selectedReceipt, setSelectedReceipt] =
     useState<TransferReceiptDto | null>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
@@ -82,6 +86,15 @@ export default function FarmerDashboard() {
       .catch((error) => {
         console.error("Failed to fetch shelf life data:", error);
         setShelfLifeItems([]);
+      });
+  }, []);
+
+  useEffect(() => {
+    getFarmerPredictiveInsights()
+      .then((data) => setPredictiveInsights(data || null))
+      .catch((error) => {
+        console.error("Failed to fetch farmer predictive insights:", error);
+        setPredictiveInsights(null);
       });
   }, []);
 
@@ -211,7 +224,10 @@ export default function FarmerDashboard() {
       </div>
 
       <div className={styles.analyticsGrid}>
-        <AIInsights data={qualityTrends} />
+        <AIInsights
+          data={qualityTrends}
+          predictiveInsights={predictiveInsights}
+        />
         <ShelfLifePanel items={shelfLifeItems} />
       </div>
 

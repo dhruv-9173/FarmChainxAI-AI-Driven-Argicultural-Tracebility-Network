@@ -60,6 +60,9 @@ public class AuthService {
     @Autowired
     private RetailerProfileRepository retailerProfileRepository;
 
+    @Autowired
+    private EmailOtpService emailOtpService;
+
     // ────────────────────────────────────────────────────────────────────────────
     // REGISTRATION
     // ────────────────────────────────────────────────────────────────────────────
@@ -146,18 +149,9 @@ public class AuthService {
             log.info("Retailer profile created for user: {}", request.getEmail());
         }
 
-        // Generate and send OTP for email verification
-        String otp = otpUtil.generateOtp();
-        OtpToken otpToken = OtpToken.builder()
-                .identifier(request.getEmail())
-                .otp(otp)
-                .expiresAt(LocalDateTime.now().plusMinutes(otpUtil.getOtpValidityMinutes()))
-                .isUsed(false)
-                .build();
-        otpTokenRepository.save(otpToken);
+        issueAndSendOtp(request.getEmail(), request.getEmail(), "registration");
 
         log.info("Registration OTP generated and sent to: {}", request.getEmail());
-        log.debug("Registration OTP (for development): {}", otp);
 
         return new RegisterResponse(
                 "Registration successful. OTP sent to your email. Please verify your email.",
@@ -236,25 +230,9 @@ public class AuthService {
             throw new RuntimeException("User email is already verified. Please login.");
         }
 
-        // Invalidate any existing OTPs for this email
-        otpTokenRepository.findLatestValidOtpByIdentifier(request.getEmail(), LocalDateTime.now())
-                .ifPresent(otpToken -> {
-                    otpToken.setIsUsed(true);
-                    otpTokenRepository.save(otpToken);
-                });
-
-        // Generate new OTP
-        String otp = otpUtil.generateOtp();
-        OtpToken otpToken = OtpToken.builder()
-                .identifier(request.getEmail())
-                .otp(otp)
-                .expiresAt(LocalDateTime.now().plusMinutes(otpUtil.getOtpValidityMinutes()))
-                .isUsed(false)
-                .build();
-        otpTokenRepository.save(otpToken);
+        issueAndSendOtp(request.getEmail(), request.getEmail(), "registration verification");
 
         log.info("New registration OTP generated and sent to: {}", request.getEmail());
-        log.debug("New registration OTP (for development): {}", otp);
 
         return new ResendRegistrationOtpResponse(
                 "New OTP sent successfully to your email.",
@@ -345,25 +323,17 @@ public class AuthService {
     public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
         log.info("Forgot password request for: {}", request.getIdentifier());
 
-        userRepository.findByEmail(request.getIdentifier())
+        User user = userRepository.findByEmail(request.getIdentifier())
                 .or(() -> userRepository.findByPhone(request.getIdentifier()))
                 .orElseThrow(() -> {
                     log.warn("User not found: {}", request.getIdentifier());
                     return new RuntimeException("User not found");
                 });
 
-        // Generate OTP
-        String otp = otpUtil.generateOtp();
-        OtpToken otpToken = OtpToken.builder()
-                .identifier(request.getIdentifier())
-                .otp(otp)
-                .expiresAt(LocalDateTime.now().plusMinutes(otpUtil.getOtpValidityMinutes()))
-                .isUsed(false)
-                .build();
-        otpTokenRepository.save(otpToken);
+        // OTP verification key remains the entered identifier, but delivery is always to user's email.
+        issueAndSendOtp(request.getIdentifier(), user.getEmail(), "password reset");
 
-        log.info("OTP generated and sent for: {}", request.getIdentifier());
-        log.debug("OTP (for development): {}", otp);
+        log.info("OTP generated and sent for identifier: {} to email: {}", request.getIdentifier(), user.getEmail());
 
         return new ForgotPasswordResponse(
                 "OTP sent successfully",
@@ -492,5 +462,24 @@ public class AuthService {
                 user.getPhone(),
                 user.getCreatedAt().toString()
         );
+    }
+
+    private void issueAndSendOtp(String otpIdentifier, String destinationEmail, String purposeLabel) {
+        otpTokenRepository.findLatestValidOtpByIdentifier(otpIdentifier, LocalDateTime.now())
+                .ifPresent(existingOtp -> {
+                    existingOtp.setIsUsed(true);
+                    otpTokenRepository.save(existingOtp);
+                });
+
+        String otp = otpUtil.generateOtp();
+        OtpToken otpToken = OtpToken.builder()
+                .identifier(otpIdentifier)
+                .otp(otp)
+                .expiresAt(LocalDateTime.now().plusMinutes(otpUtil.getOtpValidityMinutes()))
+                .isUsed(false)
+                .build();
+        otpTokenRepository.save(otpToken);
+
+        emailOtpService.sendOtpEmail(destinationEmail, otp, otpUtil.getOtpValidityMinutes(), purposeLabel);
     }
 }

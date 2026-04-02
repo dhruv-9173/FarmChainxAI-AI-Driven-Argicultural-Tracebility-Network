@@ -48,3 +48,50 @@
   width: 100%;
   height: 280px;
 }
+
+.predictiveHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.modelMeta {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.riskGrid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.riskCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #f9fafb;
+}
+
+.riskLabel {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.riskValue {
+  margin: 4px 0 0;
+  font-size: 18px;
+  color: #111827;
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .riskGrid {
+    grid-template-columns: 1fr;
+  }
+}

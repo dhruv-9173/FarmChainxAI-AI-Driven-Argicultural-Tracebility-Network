@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.time.format.TextStyle;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -416,49 +418,74 @@ public class DistributorService {
      * Get analytics data for distributor (monthly summary)
      */
     public List<DistributorAnalyticsDto> getAnalytics(String email) {
-        // Validate user exists
-        userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
-        // Group by month and count statuses
-        Map<String, DistributorAnalyticsDto> analyticsMap = new LinkedHashMap<>();
+                Long userId = user.getId();
 
-        String[] months = {"January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"};
+                // Keep the chart focused and stable: always return last 6 months in chronological order.
+                List<YearMonth> monthWindow = new ArrayList<>();
+                YearMonth current = YearMonth.now();
+                for (int i = 5; i >= 0; i--) {
+                        monthWindow.add(current.minusMonths(i));
+                }
 
-        for (String month : months) {
-            analyticsMap.put(month, DistributorAnalyticsDto.builder()
-                    .month(month)
-                    .received(0)
-                    .transferred(0)
-                    .rejected(0)
-                    .build());
-        }
+                Map<YearMonth, DistributorAnalyticsDto> analyticsByMonth = new LinkedHashMap<>();
+                for (YearMonth ym : monthWindow) {
+                        analyticsByMonth.put(ym, DistributorAnalyticsDto.builder()
+                                        .month(ym.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))
+                                        .received(0)
+                                        .transferred(0)
+                                        .rejected(0)
+                                        .build());
+                }
 
-        // Simple mock data - in production, this would be based on actual timestamps
-        analyticsMap.put("January", DistributorAnalyticsDto.builder()
-                .month("January")
-                .received(45)
-                .transferred(35)
-                .rejected(8)
-                .build());
+                List<BatchTransfer> receivedTransfers = batchTransferRepository.findByRecipientId(userId);
+                List<BatchTransfer> sentTransfers = batchTransferRepository.findBySenderId(userId);
 
-        analyticsMap.put("February", DistributorAnalyticsDto.builder()
-                .month("February")
-                .received(52)
-                .transferred(42)
-                .rejected(6)
-                .build());
+                for (BatchTransfer transfer : receivedTransfers) {
+                        YearMonth transferMonth = resolveTransferMonth(transfer);
+                        DistributorAnalyticsDto dto = analyticsByMonth.get(transferMonth);
+                        if (dto == null) {
+                                continue;
+                        }
 
-        analyticsMap.put("March", DistributorAnalyticsDto.builder()
-                .month("March")
-                .received(38)
-                .transferred(30)
-                .rejected(5)
-                .build());
+                        if (transfer.getTransferStatus() == BatchTransfer.TransferStatus.ACCEPTED) {
+                                dto.setReceived(dto.getReceived() + 1);
+                        } else if (transfer.getTransferStatus() == BatchTransfer.TransferStatus.REJECTED) {
+                                dto.setRejected(dto.getRejected() + 1);
+                        }
+                }
 
-        return new ArrayList<>(analyticsMap.values());
+                for (BatchTransfer transfer : sentTransfers) {
+                        YearMonth transferMonth = resolveTransferMonth(transfer);
+                        DistributorAnalyticsDto dto = analyticsByMonth.get(transferMonth);
+                        if (dto == null) {
+                                continue;
+                        }
+
+                        if (transfer.getTransferStatus() == BatchTransfer.TransferStatus.ACCEPTED) {
+                                dto.setTransferred(dto.getTransferred() + 1);
+                        } else if (transfer.getTransferStatus() == BatchTransfer.TransferStatus.REJECTED) {
+                                dto.setRejected(dto.getRejected() + 1);
+                        }
+                }
+
+                return new ArrayList<>(analyticsByMonth.values());
     }
+
+        private YearMonth resolveTransferMonth(BatchTransfer transfer) {
+                if (transfer.getTransferredAt() != null) {
+                        return YearMonth.from(transfer.getTransferredAt());
+                }
+                if (transfer.getUpdatedAt() != null) {
+                        return YearMonth.from(transfer.getUpdatedAt());
+                }
+                if (transfer.getCreatedAt() != null) {
+                        return YearMonth.from(transfer.getCreatedAt());
+                }
+                return YearMonth.now();
+        }
 
     /**
      * Get retailers (recipients) for transfer operations

@@ -851,25 +851,6 @@ export default function QRScannedPage() {
                       </div>
                     )}
 
-                    {event.temperatureC !== undefined ||
-                    event.humidityPercent !== undefined ? (
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "black",
-                          marginBottom: "0.25rem",
-                        }}
-                      >
-                        {event.temperatureC !== undefined &&
-                          `🌡 ${event.temperatureC}°C`}
-                        {event.temperatureC !== undefined &&
-                          event.humidityPercent !== undefined &&
-                          " • "}
-                        {event.humidityPercent !== undefined &&
-                          `💧 ${event.humidityPercent}%`}
-                      </div>
-                    ) : null}
-
                     {event.qualityScore !== undefined && (
                       <div
                         style={{
@@ -1148,20 +1129,6 @@ export default function QRScannedPage() {
             <p className={styles.footerTagline}>
               Verified Agricultural Supply Chain
             </p>
-          </div>
-          <div className={styles.footerLinks}>
-            <a href="#" className={styles.footerLink}>
-              About
-            </a>
-            <a href="#" className={styles.footerLink}>
-              Privacy
-            </a>
-            <a href="#" className={styles.footerLink}>
-              Terms
-            </a>
-            <a href="#" className={styles.footerLink}>
-              support@farmchainx.com
-            </a>
           </div>
         </div>
         <div className={styles.footerBottom}>

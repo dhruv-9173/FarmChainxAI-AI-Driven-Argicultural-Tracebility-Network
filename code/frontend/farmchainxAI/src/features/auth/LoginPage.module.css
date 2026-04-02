@@ -145,37 +145,6 @@
   margin: 0 38px 18px;
 }
 
-/* ── Google OAuth Button ─────────────────── */
-.googleBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: calc(100% - 76px);
-  margin: 0 38px 20px;
-  padding: 13px 20px;
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #1e293b;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-
-.googleBtn:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-  transform: translateY(-1px);
-}
-
-.googleBtn:active {
-  transform: translateY(0);
-}
-
 /* ── Form (inside padded card) ─────────────────── */
 .form {
   padding: 0 38px;
@@ -278,31 +247,7 @@
   }
 }
 
-/* ── Divider ────────────────────────────────────────── */
-.dividerRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 38px 20px;
-}
-
-.dividerLine {
-  flex: 1;
-  height: 1px;
-  background: #e2e8f0;
-}
-
-.dividerText {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  white-space: nowrap;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 /* ── Sign-up text ───────────────────────────────────── */
-/* (social buttons replaced by Google primary CTA above) */
 
 .signupText {
   text-align: center;
@@ -333,9 +278,7 @@
     border-radius: 20px;
   }
 
-  .googleBtn,
   .form,
-  .dividerRow,
   .signupText {
     margin-left: 22px;
     margin-right: 22px;

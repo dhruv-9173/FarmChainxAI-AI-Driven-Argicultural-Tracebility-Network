@@ -201,7 +201,7 @@ public class AuthController {
         } catch (RuntimeException e) {
             log.error("OTP verification error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(e.getMessage(), null, false));
+                    .body(new ApiResponse<>(e.getMessage(), "", false));
         } catch (Exception e) {
             log.error("Unexpected error during OTP verification: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

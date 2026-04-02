@@ -1,7 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type {
+  DistributorActivityItem,
+  DistributorAnalyticsPoint,
   DistributorBatch,
+  DistributorPredictiveInsights,
   DistributorNotification,
 } from "./types/distributor.types";
 import type {
@@ -11,10 +14,13 @@ import type {
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import {
+  getDistributorActivities,
+  getDistributorAnalytics,
   getDistributorBatches,
   getDistributorTransferReceipt,
   type TransferReceiptDto,
 } from "./api/distributorApi";
+import { getDistributorPredictiveInsights } from "../../api/analyticsApi";
 
 import TopNavBar from "../farmer/components/TopNavBar";
 import DistributorPageHeader from "./components/DistributorPageHeader";
@@ -23,6 +29,7 @@ import DistributorQuickActions from "./components/DistributorQuickActions";
 import ReceivedBatchesTable from "./components/ReceivedBatchesTable";
 import NotificationsPanel from "./components/NotificationsPanel";
 import BatchPipelinePanel from "./components/BatchPipelinePanel";
+import DistributorAnalytics from "./components/DistributorAnalytics";
 
 import TransferOutModal from "./components/transferOut/TransferOutModal";
 
@@ -48,15 +55,47 @@ export default function DistributorDashboard() {
   const [selectedReceipt, setSelectedReceipt] =
     useState<TransferReceiptDto | null>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<
+    DistributorAnalyticsPoint[]
+  >([]);
+  const [activitiesData, setActivitiesData] = useState<
+    DistributorActivityItem[]
+  >([]);
+  const [predictiveInsights, setPredictiveInsights] =
+    useState<DistributorPredictiveInsights | null>(null);
+
+  const loadBatches = useCallback(async () => {
+    try {
+      const data = await getDistributorBatches();
+      setBatches(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch batches:", error);
+      setBatches([]);
+    }
+  }, []);
+
+  const loadAnalyticsSection = useCallback(async () => {
+    try {
+      const [analytics, activities, predictive] = await Promise.all([
+        getDistributorAnalytics(),
+        getDistributorActivities(),
+        getDistributorPredictiveInsights().catch(() => null),
+      ]);
+
+      setAnalyticsData(Array.isArray(analytics) ? analytics : []);
+      setActivitiesData(Array.isArray(activities) ? activities : []);
+      setPredictiveInsights(predictive || null);
+    } catch (error) {
+      console.error("Failed to refresh analytics section:", error);
+      setAnalyticsData([]);
+      setActivitiesData([]);
+      setPredictiveInsights(null);
+    }
+  }, []);
 
   useEffect(() => {
-    // Fetch batches - keeping existing distributor API for now
-    getDistributorBatches()
-      .then((data) => setBatches(Array.isArray(data) ? data : []))
-      .catch((error) => {
-        console.error("Failed to fetch batches:", error);
-        setBatches([]);
-      });
+    loadBatches();
+    loadAnalyticsSection();
 
     // Fetch notifications using centralized API
     fetchUnreadNotifications()
@@ -69,11 +108,14 @@ export default function DistributorDashboard() {
         console.error("Failed to fetch notifications:", error);
         setNotifications([]);
       });
-  }, [fetchUnreadNotifications]);
+  }, [fetchUnreadNotifications, loadAnalyticsSection, loadBatches]);
 
   /* ── Handlers ── */
   const handleTransferComplete = useCallback(
-    (_transfer: BatchTransferResponse, recipient: TransferRecipientDto) => {
+    async (
+      _transfer: BatchTransferResponse,
+      recipient: TransferRecipientDto
+    ) => {
       if (!transferBatch) return;
       setBatches((prev) =>
         prev.map((b) =>
@@ -89,9 +131,9 @@ export default function DistributorDashboard() {
             : b
         )
       );
-      // Activity logged: Batch Transferred
+      await loadAnalyticsSection();
     },
-    [transferBatch]
+    [loadAnalyticsSection, transferBatch]
   );
 
   /* Quick-action helpers */
@@ -181,6 +223,14 @@ export default function DistributorDashboard() {
 
       <BatchPipelinePanel batches={batches} />
 
+      <div className={styles.analyticsGrid}>
+        <DistributorAnalytics
+          data={analyticsData}
+          activities={activitiesData}
+          predictiveInsights={predictiveInsights}
+        />
+      </div>
+
       {(transferBatch || showTransferModal) && (
         <TransferOutModal
           batch={transferBatch || undefined}
@@ -214,11 +264,9 @@ export default function DistributorDashboard() {
             </div>
             <QCWorkflow
               token={localStorage.getItem("token") || ""}
-              onQCComplete={() => {
-                // Refresh batches after a successful QC to reflect the state change to QUALITY_PASSED
-                getDistributorBatches()
-                  .then((data) => setBatches(Array.isArray(data) ? data : []))
-                  .catch(console.error);
+              onQCComplete={async () => {
+                // Refresh batches and analytics after successful QC so chart data stays live.
+                await Promise.all([loadBatches(), loadAnalyticsSection()]);
               }}
             />
           </div>

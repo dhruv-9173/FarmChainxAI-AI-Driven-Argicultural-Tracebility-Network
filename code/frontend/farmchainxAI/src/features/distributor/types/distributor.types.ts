@@ -50,6 +50,36 @@ export interface DistributorAnalyticsPoint {
   rejected: number;
 }
 
+export interface DistributorTransferDelayRisk {
+  avgTransitHours: number;
+  lateTransferProbabilityPct: number;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  recommendedBufferHours: number;
+  confidence: number;
+}
+
+export interface DistributorQualityDeclineForecast {
+  currentAvgQuality: number;
+  predictedQualityNext7Days: number;
+  predictedQualityNext30Days: number;
+  trend: "DECLINING" | "IMPROVING" | "STABLE";
+}
+
+export interface DistributorDemandTrendPoint {
+  month: string;
+  actual: number;
+  forecast: number;
+}
+
+export interface DistributorPredictiveInsights {
+  transferDelayRisk: DistributorTransferDelayRisk;
+  qualityDeclineForecast: DistributorQualityDeclineForecast;
+  demandTrend: DistributorDemandTrendPoint[];
+  modelVersion: string;
+  generatedAt: string;
+  confidence: number;
+}
+
 export interface RetailRecipient {
   id: string;
   name: string;

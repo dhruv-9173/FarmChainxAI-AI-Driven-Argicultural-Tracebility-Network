@@ -74,6 +74,34 @@ export interface QualityTrendPoint {
   rice: number;
 }
 
+export interface ForecastPoint {
+  month: string;
+  actual: number;
+  forecast: number;
+}
+
+export interface QualityForecastPoint {
+  label: string;
+  actual: number;
+  predicted: number;
+}
+
+export interface ShelfLifeRiskInsight {
+  highRiskBatches: number;
+  avgRemainingShelfLifeDays: number;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  confidence: number;
+}
+
+export interface FarmerPredictiveInsights {
+  qualityForecast: QualityForecastPoint[];
+  shelfLifeRisk: ShelfLifeRiskInsight;
+  demandTrend: ForecastPoint[];
+  modelVersion: string;
+  generatedAt: string;
+  confidence: number;
+}
+
 export interface ShelfLifeItem {
   crop: string;
   batchId: string;

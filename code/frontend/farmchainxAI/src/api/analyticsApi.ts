@@ -1,4 +1,6 @@
 import apiClient from "./apiClient";
+import type { FarmerPredictiveInsights } from "../types/dashboard.types";
+import type { DistributorPredictiveInsights } from "../features/distributor/types/distributor.types";
 
 /**
  * Analytics API integration
@@ -116,3 +118,27 @@ export const getBatchStatusBreakdown = async (token: string) => {
     throw error;
   }
 };
+
+// --- PREDICTIVE ANALYTICS ---
+
+export const getFarmerPredictiveInsights =
+  async (): Promise<FarmerPredictiveInsights> => {
+    try {
+      const response = await apiClient.get("/analytics/predictive/farmer");
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching farmer predictive insights:", error);
+      throw error;
+    }
+  };
+
+export const getDistributorPredictiveInsights =
+  async (): Promise<DistributorPredictiveInsights> => {
+    try {
+      const response = await apiClient.get("/analytics/predictive/distributor");
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching distributor predictive insights:", error);
+      throw error;
+    }
+  };

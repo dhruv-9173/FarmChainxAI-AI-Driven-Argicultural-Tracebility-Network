@@ -11,15 +11,21 @@ import {
 import type {
   DistributorAnalyticsPoint,
   DistributorActivityItem,
+  DistributorPredictiveInsights,
 } from "../types/distributor.types";
 import styles from "./DistributorAnalytics.module.css";
 
 interface Props {
   data: DistributorAnalyticsPoint[];
   activities: DistributorActivityItem[];
+  predictiveInsights?: DistributorPredictiveInsights | null;
 }
 
-export default function DistributorAnalytics({ data, activities }: Props) {
+export default function DistributorAnalytics({
+  data,
+  activities,
+  predictiveInsights,
+}: Props) {
   const totalReceived = data.reduce((s, d) => s + d.received, 0);
   const totalTransferred = data.reduce((s, d) => s + d.transferred, 0);
   const successRate =
@@ -119,6 +125,58 @@ export default function DistributorAnalytics({ data, activities }: Props) {
         </div>
       </div>
 
+      {predictiveInsights && (
+        <div className={styles.predictiveSection}>
+          <div className={styles.predictiveHeader}>
+            <h4 className={styles.activityHeader}>Predictive Insights</h4>
+            <span className={styles.modelMeta}>
+              {predictiveInsights.modelVersion} | conf.
+              {Math.round(predictiveInsights.confidence * 100)}%
+            </span>
+          </div>
+
+          <div className={styles.predictionCards}>
+            <div className={styles.predictionCard}>
+              <span className={styles.predictionLabel}>Delay Risk</span>
+              <strong className={styles.predictionValue}>
+                {predictiveInsights.transferDelayRisk.riskLevel}
+              </strong>
+              <span className={styles.predictionSub}>
+                {
+                  predictiveInsights.transferDelayRisk
+                    .lateTransferProbabilityPct
+                }
+                % late
+              </span>
+            </div>
+
+            <div className={styles.predictionCard}>
+              <span className={styles.predictionLabel}>Transit Avg</span>
+              <strong className={styles.predictionValue}>
+                {predictiveInsights.transferDelayRisk.avgTransitHours}h
+              </strong>
+              <span className={styles.predictionSub}>
+                buffer{" "}
+                {predictiveInsights.transferDelayRisk.recommendedBufferHours}h
+              </span>
+            </div>
+
+            <div className={styles.predictionCard}>
+              <span className={styles.predictionLabel}>Quality (30d)</span>
+              <strong className={styles.predictionValue}>
+                {
+                  predictiveInsights.qualityDeclineForecast
+                    .predictedQualityNext30Days
+                }
+              </strong>
+              <span className={styles.predictionSub}>
+                {predictiveInsights.qualityDeclineForecast.trend}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recent Activity */}
       <div className={styles.activitySection}>
         <h4 className={styles.activityHeader}>Recent Activity</h4>
@@ -152,4 +210,3 @@ export default function DistributorAnalytics({ data, activities }: Props) {
     </div>
   );
 }
-
