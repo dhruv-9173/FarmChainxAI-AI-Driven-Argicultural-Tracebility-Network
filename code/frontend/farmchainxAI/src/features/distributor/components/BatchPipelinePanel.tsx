@@ -6,7 +6,12 @@ interface Props {
 }
 
 const STAGES = [
-  { key: "Incoming" as const, label: "Incoming", icon: "📥", color: "#2563EB" },
+  {
+    key: "RECEIVED_BY_DIST" as const,
+    label: "Incoming",
+    icon: "📥",
+    color: "#2563EB",
+  },
   { key: "Accepted" as const, label: "Accepted", icon: "✅", color: "#16A34A" },
   {
     key: "In Transit" as const,
@@ -24,7 +29,8 @@ const STAGES = [
 
 export default function BatchPipelinePanel({ batches }: Props) {
   const counts = {
-    Incoming: batches.filter((b) => b.status === "Incoming").length,
+    RECEIVED_BY_DIST: batches.filter((b) => b.status === "RECEIVED_BY_DIST")
+      .length,
     Accepted: batches.filter((b) => b.status === "Accepted").length,
     "In Transit": batches.filter((b) => b.status === "In Transit").length,
     Transferred: batches.filter((b) => b.status === "Transferred").length,
@@ -148,4 +154,3 @@ export default function BatchPipelinePanel({ batches }: Props) {
     </div>
   );
 }
-

@@ -43,6 +43,10 @@ export interface ProfilePageLayoutProps {
   profilePath: string; // e.g. "/farmer/profile"
   accentCss: string; // CSS variable string, e.g. "--accent: #166534; --accent-bg: #f0fdf4;"
   onSave: (draftSections: ProfileSection[]) => Promise<void>;
+  onChangePassword?: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
 }
 
 /* ─── Small helpers ─── */
@@ -131,14 +135,17 @@ function StatBox({ label, value, color }: ProfileStat) {
 function ChangePasswordModal({
   onClose,
   onSuccess,
+  onSubmit,
 }: {
   onClose: () => void;
   onSuccess: () => void;
+  onSubmit?: (currentPassword: string, newPassword: string) => Promise<void>;
 }) {
   const [form, setForm] = useState({ current: "", next: "", confirm: "" });
   const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.current) {
       setErr("Current password is required.");
       return;
@@ -152,8 +159,20 @@ function ChangePasswordModal({
       return;
     }
     setErr("");
-    onSuccess();
-    onClose();
+    try {
+      setSaving(true);
+      if (onSubmit) {
+        await onSubmit(form.current, form.next);
+      }
+      onSuccess();
+      onClose();
+    } catch (error) {
+      setErr(
+        error instanceof Error ? error.message : "Failed to update password."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -199,8 +218,12 @@ function ChangePasswordModal({
           <button className={styles.cancelBtn} onClick={onClose}>
             Cancel
           </button>
-          <button className={styles.saveBtn} onClick={handleSubmit}>
-            Update Password
+          <button
+            className={styles.saveBtn}
+            onClick={() => void handleSubmit()}
+            disabled={saving}
+          >
+            {saving ? "Updating..." : "Update Password"}
           </button>
         </div>
       </div>
@@ -217,6 +240,7 @@ export default function ProfilePageLayout({
   profilePath,
   accentCss,
   onSave,
+  onChangePassword,
 }: ProfilePageLayoutProps) {
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
@@ -467,6 +491,7 @@ export default function ProfilePageLayout({
         <ChangePasswordModal
           onClose={() => setShowPwd(false)}
           onSuccess={() => showToast("Password updated successfully")}
+          onSubmit={onChangePassword}
         />
       )}
 

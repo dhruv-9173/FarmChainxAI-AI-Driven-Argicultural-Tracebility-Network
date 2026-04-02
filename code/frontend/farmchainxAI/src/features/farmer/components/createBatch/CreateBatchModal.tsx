@@ -254,6 +254,7 @@ export default function CreateBatchModal({ onClose, onBatchCreated }: Props) {
         sowingDate: data.sowingDate,
         harvestDate: data.harvestDate,
         notes: data.notes || undefined,
+        cropImageBase64: data.cropImagePreview || undefined,
       };
 
       const createdBatchFromApi = await createBatch(payload);

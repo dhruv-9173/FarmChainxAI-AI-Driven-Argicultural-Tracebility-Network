@@ -9,7 +9,8 @@ const App: React.FC = () => (
   <BrowserRouter>
     <Routes>
       {/* Public QR traceability page — no auth context required */}
-      <Route path="/batch/:batchId" element={<QRScannedPageNew />} />
+
+      <Route path="/batch/:batchId/*" element={<QRScannedPageNew />} />
 
       {/* All authenticated routes wrapped with AuthProvider */}
       <Route

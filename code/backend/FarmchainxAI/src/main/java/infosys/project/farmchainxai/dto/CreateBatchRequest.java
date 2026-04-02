@@ -78,5 +78,11 @@ public class CreateBatchRequest {
     @JsonProperty("gapCertified")
     private Boolean gapCertified;
 
+    @JsonProperty("cropImageUrl")
+    private String cropImageUrl;
+
+    @JsonProperty("cropImageBase64")
+    private String cropImageBase64;
+
 }
 

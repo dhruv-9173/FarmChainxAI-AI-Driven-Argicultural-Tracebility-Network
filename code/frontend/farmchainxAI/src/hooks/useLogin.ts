@@ -10,8 +10,8 @@ const ROLE_DASHBOARD: Record<UserRole, string> = {
   FARMER: "/farmer/dashboard",
   DISTRIBUTOR: "/distributor/dashboard",
   RETAILER: "/retailer/dashboard",
-  CONSUMER: "/dashboard",
-  ADMIN: "/admin/dashboard",
+  CONSUMER: "/consumer/dashboard",
+  ADMIN: "/admin/analytics",
 };
 
 export const useLogin = () => {
@@ -39,7 +39,7 @@ export const useLogin = () => {
           err instanceof Error
             ? err.message
             : "Login failed. Please try again.";
-            
+
         if (message.includes("Email not verified")) {
           navigate("/verify-registration-otp", {
             state: {

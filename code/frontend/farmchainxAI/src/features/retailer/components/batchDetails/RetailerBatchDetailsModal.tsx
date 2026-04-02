@@ -243,7 +243,9 @@ function PriceTab({ batch }: { batch: RetailerBatch }) {
         </div>
         <div className={styles.priceCard}>
           <span className={styles.priceLabel}>Sell Price / kg</span>
-          <span className={styles.priceValue}>â‚¹{batch.sellingPricePerKg}</span>
+          <span className={styles.priceValue}>
+            â‚¹{batch.sellingPricePerKg}
+          </span>
         </div>
         <div className={styles.priceCard}>
           <span className={styles.priceLabel}>Est. Revenue</span>
@@ -355,19 +357,6 @@ function StatusActions({
     onClose();
   };
   const { status } = batch;
-
-  if (status === "Incoming") {
-    return (
-      <div className={styles.actionBtns}>
-        <button className={styles.actionGreen} onClick={() => act("Accepted")}>
-          âœ“ Accept Batch
-        </button>
-        <button className={styles.actionRed} onClick={() => act("Rejected")}>
-          âœ• Reject Batch
-        </button>
-      </div>
-    );
-  }
   if (status === "Accepted") {
     return (
       <div className={styles.actionBtns}>

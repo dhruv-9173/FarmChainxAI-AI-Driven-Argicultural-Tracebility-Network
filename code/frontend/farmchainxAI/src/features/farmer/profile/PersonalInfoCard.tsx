@@ -12,6 +12,7 @@ interface Props {
 interface Errors {
   fullName?: string;
   phone?: string;
+  form?: string;
 }
 
 function validatePersonal(data: { fullName: string; phone: string }): Errors {
@@ -51,14 +52,24 @@ export default function PersonalInfoCard({
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const errs = validatePersonal(draft);
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
-    updateUserProfile({ fullName: draft.fullName, phone: draft.phone });
-    onSave();
+    try {
+      await updateUserProfile({ fullName: draft.fullName, phone: draft.phone });
+      onSave();
+    } catch (error) {
+      setErrors((prev) => ({
+        ...prev,
+        form:
+          error instanceof Error
+            ? error.message
+            : "Failed to save personal information",
+      }));
+    }
   };
 
   return (
@@ -138,6 +149,9 @@ export default function PersonalInfoCard({
                 readOnly
               />
             </div>
+            {errors.form && (
+              <span className={styles.fieldError}>{errors.form}</span>
+            )}
           </>
         ) : (
           <>
@@ -157,7 +171,7 @@ export default function PersonalInfoCard({
           </button>
           <button
             className={styles.saveBtn}
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             type="button"
             disabled={saving}
           >

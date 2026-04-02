@@ -21,5 +21,8 @@ public class InitiateBatchTransferRequest {
 
     @JsonProperty("note")
     private String note;
+
+    @JsonProperty("transferPrice")
+    private Double transferPrice;
 }
 

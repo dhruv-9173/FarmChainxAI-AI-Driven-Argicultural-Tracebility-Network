@@ -10,7 +10,11 @@ import type {
 } from "../transfer/api/transferApi";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
-import { getDistributorBatches } from "./api/distributorApi";
+import {
+  getDistributorBatches,
+  getDistributorTransferReceipt,
+  type TransferReceiptDto,
+} from "./api/distributorApi";
 
 import TopNavBar from "../farmer/components/TopNavBar";
 import DistributorPageHeader from "./components/DistributorPageHeader";
@@ -41,6 +45,9 @@ export default function DistributorDashboard() {
   );
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showQCModal, setShowQCModal] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] =
+    useState<TransferReceiptDto | null>(null);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch batches - keeping existing distributor API for now
@@ -53,7 +60,11 @@ export default function DistributorDashboard() {
 
     // Fetch notifications using centralized API
     fetchUnreadNotifications()
-      .then((data) => setNotifications(Array.isArray(data) ? (data as DistributorNotification[]) : []))
+      .then((data) =>
+        setNotifications(
+          Array.isArray(data) ? (data as DistributorNotification[]) : []
+        )
+      )
       .catch((error) => {
         console.error("Failed to fetch notifications:", error);
         setNotifications([]);
@@ -116,6 +127,21 @@ export default function DistributorDashboard() {
     }
   }, [markAllAsRead]);
 
+  const handleViewReceipt = useCallback(async (batch: DistributorBatch) => {
+    setReceiptError(null);
+    try {
+      const receipt = await getDistributorTransferReceipt(batch.id);
+      setSelectedReceipt(receipt);
+    } catch (error) {
+      setSelectedReceipt(null);
+      setReceiptError(
+        error instanceof Error
+          ? error.message
+          : "Transfer receipt not found for this batch"
+      );
+    }
+  }, []);
+
   return (
     <div className={styles.page}>
       <TopNavBar
@@ -128,7 +154,7 @@ export default function DistributorDashboard() {
 
       <DistributorKPICards batches={batches} />
 
-      <DistributorQuickActions 
+      <DistributorQuickActions
         onTransferOut={handleOpenTransferQuick}
         onQualityCheck={() => setShowQCModal(true)}
       />
@@ -137,7 +163,11 @@ export default function DistributorDashboard() {
         <div className={styles.tableArea}>
           <ReceivedBatchesTable
             batches={batches}
+            onViewReceipt={handleViewReceipt}
           />
+          {receiptError && (
+            <div className={styles.receiptError}>{receiptError}</div>
+          )}
         </div>
         <div className={styles.notifArea}>
           <NotificationsPanel
@@ -164,18 +194,26 @@ export default function DistributorDashboard() {
 
       {showQCModal && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modalContent} style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div
+            className={styles.modalContent}
+            style={{
+              maxWidth: "800px",
+              width: "90%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
             <div className={styles.modalHeader}>
               <h2>Quality Check Dashboard</h2>
-              <button 
-                className={styles.closeBtn} 
+              <button
+                className={styles.closeBtn}
                 onClick={() => setShowQCModal(false)}
               >
                 ✕
               </button>
             </div>
-            <QCWorkflow 
-              token={localStorage.getItem("token") || ""} 
+            <QCWorkflow
+              token={localStorage.getItem("token") || ""}
               onQCComplete={() => {
                 // Refresh batches after a successful QC to reflect the state change to QUALITY_PASSED
                 getDistributorBatches()
@@ -183,6 +221,74 @@ export default function DistributorDashboard() {
                   .catch(console.error);
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {selectedReceipt && (
+        <div
+          className={styles.receiptOverlay}
+          onClick={() => setSelectedReceipt(null)}
+        >
+          <div
+            className={styles.receiptModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.receiptHeader}>
+              <h3 className={styles.receiptTitle}>Transfer Receipt</h3>
+              <button
+                className={styles.receiptClose}
+                onClick={() => setSelectedReceipt(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.receiptGrid}>
+              <div className={styles.receiptRow}>
+                <span>Transfer ID</span>
+                <strong>{selectedReceipt.transferId}</strong>
+              </div>
+              <div className={styles.receiptRow}>
+                <span>Batch ID</span>
+                <strong>{selectedReceipt.batchId}</strong>
+              </div>
+              <div className={styles.receiptRow}>
+                <span>Status</span>
+                <strong>{selectedReceipt.status}</strong>
+              </div>
+              <div className={styles.receiptRow}>
+                <span>Recipient</span>
+                <strong>
+                  {selectedReceipt.recipientName} (
+                  {selectedReceipt.recipientRole})
+                </strong>
+              </div>
+              <div className={styles.receiptRow}>
+                <span>Recipient Contact</span>
+                <strong>
+                  {selectedReceipt.recipientEmail || "-"}
+                  {selectedReceipt.recipientPhone
+                    ? ` • ${selectedReceipt.recipientPhone}`
+                    : ""}
+                </strong>
+              </div>
+              <div className={styles.receiptRow}>
+                <span>Crop</span>
+                <strong>{selectedReceipt.cropType}</strong>
+              </div>
+              <div className={styles.receiptRow}>
+                <span>Quantity</span>
+                <strong>
+                  {selectedReceipt.quantity}{" "}
+                  {selectedReceipt.quantityUnit || ""}
+                </strong>
+              </div>
+              <div className={styles.receiptRow}>
+                <span>Transfer Note</span>
+                <strong>{selectedReceipt.transferNote || "-"}</strong>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -174,6 +174,20 @@ public class FarmerController {
         }
     }
 
+    @PatchMapping("/batches/{id}/harvest")
+    public ResponseEntity<ApiResponse<BatchDto>> markBatchAsHarvested(
+            Authentication authentication,
+            @PathVariable String id) {
+        try {
+            String userId = authentication.getName();
+            BatchDto updated = farmerService.markBatchAsHarvested(userId, id);
+            return ResponseEntity.ok(new ApiResponse<>("Batch marked as harvested", updated, true));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>("Failed to mark batch as harvested: " + e.getMessage(), null, false));
+        }
+    }
+
     @PostMapping("/batches")
     public ResponseEntity<ApiResponse<BatchDto>> createBatch(
             Authentication authentication,

@@ -17,6 +17,30 @@ import type {
   DistributorProfileData,
 } from "../types/distributor.types";
 
+interface ApiResponseWrapper<T> {
+  success: boolean;
+  message: string;
+  data: T | null;
+}
+
+export interface TransferReceiptDto {
+  transferId: string;
+  batchId: string;
+  status: string;
+  senderName: string;
+  senderRole: string;
+  recipientName: string;
+  recipientRole: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  cropType: string;
+  quantity: number;
+  quantityUnit?: string;
+  transferNote?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // ── Profile ───────────────────────────────────────────────────────────────────
 
 /** GET /api/v1/distributor/profile */
@@ -67,6 +91,21 @@ export const getPendingBatches = async (): Promise<DistributorBatch[]> => {
 /** GET /api/v1/distributor/batches (all batches - for compatibility) */
 export const getDistributorBatches = async (): Promise<DistributorBatch[]> => {
   const res = await apiClient.get("/distributor/batches/received");
+  return res.data.data;
+};
+
+/** GET /api/v1/transfers/batches/:batchId/receipt */
+export const getDistributorTransferReceipt = async (
+  batchId: string
+): Promise<TransferReceiptDto> => {
+  const res = await apiClient.get<ApiResponseWrapper<TransferReceiptDto>>(
+    `/transfers/batches/${batchId}/receipt`
+  );
+
+  if (!res.data.success || !res.data.data) {
+    throw new Error(res.data.message || "Failed to fetch transfer receipt");
+  }
+
   return res.data.data;
 };
 

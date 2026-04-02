@@ -14,6 +14,8 @@ import RetailerAnalyticsPage from "../features/retailer/analytics/RetailerAnalyt
 import RetailerBrowsePage from "../features/retailer/browse/RetailerBrowsePage";
 import RetailerProfilePage from "../features/retailer/profile/RetailerProfilePage";
 import SuppliersDirectoryPage from "../features/retailer/suppliers/SuppliersDirectoryPage";
+import ConsumerDashboard from "../features/consumer/ConsumerDashboard";
+import QRScannedPageNew from "../features/qr/QRScannedPageNew";
 
 import ProtectedRoute from "../components/common/ProtectedRoute";
 import { useAuth } from "../hooks/useAuth";
@@ -22,19 +24,25 @@ const ROLE_DASHBOARD = {
   FARMER: "/farmer/dashboard",
   DISTRIBUTOR: "/distributor/dashboard",
   RETAILER: "/retailer/dashboard",
-  CONSUMER: "/dashboard",
+  CONSUMER: "/consumer/dashboard",
   ADMIN: "/admin/analytics",
 } as const;
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
-  const defaultPath =
+  const roleDashboardPath =
     isAuthenticated && user
       ? ROLE_DASHBOARD[user.role] ?? "/dashboard"
       : "/login";
+  const defaultPath = roleDashboardPath;
 
   return (
     <Routes>
+      {/* Public QR routes (must never require authentication) */}
+      <Route path="/batch" element={<QRScannedPageNew />} />
+      <Route path="/batch/:batchId" element={<QRScannedPageNew />} />
+      <Route path="/batch/:batchId/*" element={<QRScannedPageNew />} />
+
       {/* Auth routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -45,7 +53,7 @@ const AppRoutes: React.FC = () => {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <FarmerDashboard />
+            <Navigate to={roleDashboardPath} replace />
           </ProtectedRoute>
         }
       />
@@ -153,6 +161,14 @@ const AppRoutes: React.FC = () => {
       {/* Admin routes */}
 
       {/* Consumer routes */}
+      <Route
+        path="/consumer/dashboard"
+        element={
+          <ProtectedRoute>
+            <ConsumerDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Default redirect */}
       <Route path="/" element={<Navigate to={defaultPath} replace />} />

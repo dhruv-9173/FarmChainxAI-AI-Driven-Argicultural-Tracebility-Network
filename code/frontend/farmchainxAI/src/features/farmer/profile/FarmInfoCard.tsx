@@ -14,6 +14,7 @@ interface Errors {
   location?: string;
   farmSize?: string;
   primaryCrops?: string;
+  form?: string;
 }
 
 function validateFarm(data: {
@@ -69,14 +70,24 @@ export default function FarmInfoCard({
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const errs = validateFarm(draft);
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
-    updateFarmProfile(draft);
-    onSave();
+    try {
+      await updateFarmProfile(draft);
+      onSave();
+    } catch (error) {
+      setErrors((prev) => ({
+        ...prev,
+        form:
+          error instanceof Error
+            ? error.message
+            : "Failed to save farm information",
+      }));
+    }
   };
 
   return (
@@ -185,6 +196,9 @@ export default function FarmInfoCard({
                 }
               />
             </div>
+            {errors.form && (
+              <span className={styles.fieldError}>{errors.form}</span>
+            )}
           </>
         ) : (
           <>
@@ -209,7 +223,7 @@ export default function FarmInfoCard({
           </button>
           <button
             className={styles.saveBtn}
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             type="button"
             disabled={saving}
           >

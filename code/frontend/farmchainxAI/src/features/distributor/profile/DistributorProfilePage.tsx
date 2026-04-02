@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import ProfilePageLayout from "../../../components/common/ProfilePage";
 import type { ProfileSection } from "../../../components/common/ProfilePage";
 import { useAuth } from "../../../hooks/useAuth";
+import type { UserRole } from "../../../types/auth.types";
 import {
   getDistributorProfile,
+  updateDistributorProfile,
+  changePassword,
   getDistributorKpis,
-  getReceivedBatches,
   getPendingBatches,
   getDistributorActivities,
 } from "../api/distributorApi";
@@ -13,6 +15,12 @@ import type {
   KpiCard,
   DistributorActivityItem,
 } from "../types/distributor.types";
+
+type DistributorKpiApi = KpiCard & {
+  title?: string;
+  value?: string;
+  subtitle?: string;
+};
 
 export default function DistributorProfilePage() {
   const { user: authUser } = useAuth();
@@ -38,7 +46,6 @@ export default function DistributorProfilePage() {
     establishedYear: "",
   });
 
-  const [kpis, setKpis] = useState<KpiCard[]>([]);
   const [activities, setActivities] = useState<DistributorActivityItem[]>([]);
   const [stats, setStats] = useState({
     batchesReceived: "0",
@@ -50,34 +57,50 @@ export default function DistributorProfilePage() {
   useEffect(() => {
     // Fetch profile data
     getDistributorProfile()
-      .then((data: typeof user & { biz?: typeof biz }) => {
+      .then((data) => {
         if (data) {
-          setUser((u) => ({ ...u, ...data }));
-          if (data.biz) setBiz((b) => ({ ...b, ...data.biz }));
+          setUser((u) => ({
+            ...u,
+            fullName: data.fullName ?? u.fullName,
+            email: data.email ?? u.email,
+            phone: data.phone ?? u.phone,
+            role: (data.role as UserRole) ?? u.role,
+            distributorId: data.distributorId ?? u.distributorId,
+            memberSince: data.memberSince ?? u.memberSince,
+            avatarUrl: data.avatarUrl ?? u.avatarUrl,
+          }));
+          setBiz((b) => ({
+            ...b,
+            companyName: data.companyName ?? b.companyName,
+            companyId: data.companyId ?? b.companyId,
+            warehouseLocation: data.warehouseLocation ?? b.warehouseLocation,
+            gstNumber: data.gstNumber ?? b.gstNumber,
+            licenseNumber: data.licenseNumber ?? b.licenseNumber,
+            operationalArea: data.operationalArea ?? b.operationalArea,
+            warehouseCapacity: data.warehouseCapacity ?? b.warehouseCapacity,
+            establishedYear: data.establishedYear ?? b.establishedYear,
+          }));
         }
       })
       .catch(console.error);
 
     // Fetch KPIs
     getDistributorKpis()
-      .then((data: KpiCard[]) => {
-        setKpis(data);
-        // Extract stats from KPIs
+      .then((data: DistributorKpiApi[]) => {
+        // Extract stats from backend KPI titles
         const batchesReceivedCard = data.find(
           (k) => k.title === "Total Batches Received"
         );
         const batchesTransferredCard = data.find(
           (k) => k.title === "Batches Transferred"
         );
-        const qualityCard = data.find(
-          (k) => k.title === "Quality Score Average"
-        );
+        const qualityCard = data.find((k) => k.title === "Quality Score");
 
         setStats((prev) => ({
           ...prev,
-          batchesReceived: batchesReceivedCard?.subtitle ?? "0",
-          batchesTransferred: batchesTransferredCard?.subtitle ?? "0",
-          qualityScore: qualityCard?.subtitle ?? "—",
+          batchesReceived: batchesReceivedCard?.value ?? "0",
+          batchesTransferred: batchesTransferredCard?.value ?? "0",
+          qualityScore: qualityCard?.value ?? "—",
         }));
       })
       .catch(console.error);
@@ -99,8 +122,6 @@ export default function DistributorProfilePage() {
       })
       .catch(console.error);
   }, []);
-  // TODO: call updateDistributorProfile(payload) in handleSave once API is ready
-
   function buildSections(): ProfileSection[] {
     return [
       {
@@ -210,23 +231,51 @@ export default function DistributorProfilePage() {
   const handleSave = async (draft: ProfileSection[]) => {
     const personal = draft[0].fields;
     const bizFields = draft[1].fields;
+    const payload = {
+      fullName:
+        personal.find((f) => f.key === "fullName")?.value ?? user.fullName,
+      phone: personal.find((f) => f.key === "phone")?.value ?? user.phone,
+      companyName:
+        bizFields.find((f) => f.key === "companyName")?.value ??
+        biz.companyName,
+      warehouseLocation:
+        bizFields.find((f) => f.key === "warehouseLoc")?.value ??
+        biz.warehouseLocation,
+      operationalArea:
+        bizFields.find((f) => f.key === "operationalArea")?.value ??
+        biz.operationalArea,
+    };
+
+    const updated = await updateDistributorProfile(payload);
+
     setUser((u) => ({
       ...u,
-      fullName: personal.find((f) => f.key === "fullName")?.value ?? u.fullName,
-      email: personal.find((f) => f.key === "email")?.value ?? u.email,
-      phone: personal.find((f) => f.key === "phone")?.value ?? u.phone,
+      fullName: updated.fullName ?? u.fullName,
+      email: updated.email ?? u.email,
+      phone: updated.phone ?? u.phone,
+      role: (updated.role as UserRole) ?? u.role,
+      distributorId: updated.distributorId ?? u.distributorId,
+      memberSince: updated.memberSince ?? u.memberSince,
+      avatarUrl: updated.avatarUrl ?? u.avatarUrl,
     }));
     setBiz((b) => ({
       ...b,
-      companyName:
-        bizFields.find((f) => f.key === "companyName")?.value ?? b.companyName,
-      warehouseLocation:
-        bizFields.find((f) => f.key === "warehouseLoc")?.value ??
-        b.warehouseLocation,
-      operationalArea:
-        bizFields.find((f) => f.key === "operationalArea")?.value ??
-        b.operationalArea,
+      companyName: updated.companyName ?? b.companyName,
+      companyId: updated.companyId ?? b.companyId,
+      warehouseLocation: updated.warehouseLocation ?? b.warehouseLocation,
+      gstNumber: updated.gstNumber ?? b.gstNumber,
+      licenseNumber: updated.licenseNumber ?? b.licenseNumber,
+      operationalArea: updated.operationalArea ?? b.operationalArea,
+      warehouseCapacity: updated.warehouseCapacity ?? b.warehouseCapacity,
+      establishedYear: updated.establishedYear ?? b.establishedYear,
     }));
+  };
+
+  const handleChangePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
+    await changePassword({ currentPassword, newPassword });
   };
 
   return (
@@ -268,6 +317,7 @@ export default function DistributorProfilePage() {
       profilePath="/distributor/profile"
       accentCss="--accent: #2563eb; --accent-bg: #eff6ff;"
       onSave={handleSave}
+      onChangePassword={handleChangePassword}
     />
   );
 }

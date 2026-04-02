@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.format.DateTimeFormatter;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
@@ -147,6 +148,43 @@ public class BatchTransferService {
         }
     }
 
+    public Map<String, Object> getLatestTransferReceiptForFarmer(Long requesterId, String batchId) {
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("Batch not found: " + batchId));
+
+        BatchTransfer transfer = batchTransferRepository.findTopByBatchIdOrderByCreatedAtDesc(batchId)
+                .orElseThrow(() -> new RuntimeException("No transfer receipt found for this batch"));
+
+        boolean isFarmerOwner = requesterId.equals(batch.getFarmerId());
+        boolean isTransferSender = requesterId.equals(transfer.getSenderId());
+
+        if (!isFarmerOwner && !isTransferSender) {
+            throw new RuntimeException("Unauthorized: You are not allowed to view this transfer receipt");
+        }
+
+        User sender = userRepository.findById(transfer.getSenderId()).orElse(null);
+        User recipient = userRepository.findById(transfer.getRecipientId()).orElse(null);
+
+        Map<String, Object> receipt = new HashMap<>();
+        receipt.put("transferId", transfer.getId());
+        receipt.put("batchId", transfer.getBatchId());
+        receipt.put("status", transfer.getTransferStatus().name());
+        receipt.put("senderName", sender != null ? sender.getFullName() : "Unknown");
+        receipt.put("senderRole", transfer.getSenderRole());
+        receipt.put("recipientName", recipient != null ? recipient.getFullName() : "Unknown");
+        receipt.put("recipientRole", transfer.getRecipientRole());
+        receipt.put("recipientEmail", recipient != null ? recipient.getEmail() : null);
+        receipt.put("recipientPhone", recipient != null ? recipient.getPhone() : null);
+        receipt.put("cropType", batch.getCropType());
+        receipt.put("quantity", batch.getQuantity());
+        receipt.put("quantityUnit", batch.getQuantityUnit() != null ? batch.getQuantityUnit().name() : null);
+        receipt.put("transferNote", transfer.getInspectionNote());
+        receipt.put("createdAt", transfer.getCreatedAt());
+        receipt.put("updatedAt", transfer.getUpdatedAt());
+
+        return receipt;
+    }
+
     /**
      * Initiate a batch transfer between two users
      * @param currentUserId The sender's ID (current user)
@@ -174,13 +212,18 @@ public class BatchTransferService {
                 throw new RuntimeException("Batch cannot be transferred. Current status: " + batch.getStatus() + ". Required: HARVESTED or CREATED");
             }
         } else if (sender.getRole() == User.UserRole.DISTRIBUTOR) {
-            // Distributor: must be the current owner
-            if (!currentUserId.equals(batch.getCurrentOwnerId()) && !currentUserId.equals(batch.getDistributorId())) {
+            // Distributor: must be the current owner.
+            // Use currentOwnerId as the source of truth; distributorId is only a legacy fallback.
+            if (batch.getCurrentOwnerId() != null) {
+                if (!currentUserId.equals(batch.getCurrentOwnerId())) {
+                    throw new RuntimeException("Unauthorized: Batch is not currently owned by this distributor");
+                }
+            } else if (!currentUserId.equals(batch.getDistributorId())) {
                 throw new RuntimeException("Unauthorized: Batch is not currently owned by this distributor");
             }
-            // Distributor can transfer RECEIVED_BY_DIST or QUALITY_PASSED batches
-            if (batch.getStatus() != Batch.BatchStatus.RECEIVED_BY_DIST && batch.getStatus() != Batch.BatchStatus.QUALITY_PASSED) {
-                throw new RuntimeException("Batch cannot be transferred. Current status: " + batch.getStatus() + ". Required: RECEIVED_BY_DIST or QUALITY_PASSED");
+            // Distributor can transfer only quality-checked batches
+            if (batch.getStatus() != Batch.BatchStatus.QUALITY_PASSED) {
+                throw new RuntimeException("Batch cannot be transferred. Current status: " + batch.getStatus() + ". Required: QUALITY_PASSED");
             }
         } else {
             throw new RuntimeException("Only FARMER or DISTRIBUTOR roles can initiate transfers");
@@ -203,6 +246,14 @@ public class BatchTransferService {
         // Validate transfer permissions based on sender's role
         validateTransferPermissions(sender.getRole(), recipient.getRole());
 
+        BigDecimal transferUnitPrice = request.getTransferPrice() != null
+            ? BigDecimal.valueOf(request.getTransferPrice())
+            : null;
+
+        if (transferUnitPrice != null && transferUnitPrice.signum() < 0) {
+            throw new RuntimeException("Transfer price cannot be negative");
+        }
+
 
 
         // Create batch transfer record
@@ -219,6 +270,32 @@ public class BatchTransferService {
                 .build();
 
         BatchTransfer savedTransfer = batchTransferRepository.save(transfer);
+
+        if (transferUnitPrice != null) {
+            batch.setPricePerUnit(transferUnitPrice);
+            batchRepository.save(batch);
+        }
+
+        try {
+            SupplyChainEvent transferEvent = new SupplyChainEvent();
+            transferEvent.setBatchId(request.getBatchId());
+            transferEvent.setStage(SupplyChainEvent.SupplyChainStage.IN_TRANSIT);
+            transferEvent.setActorId(currentUserId);
+            transferEvent.setActorName(sender.getFullName());
+            transferEvent.setActorRole(sender.getRole().name());
+            transferEvent.setLocation(sender.getFullName() + " Transfer Point");
+            transferEvent.setEventType("TRANSFERRED");
+            transferEvent.setTimestamp(LocalDateTime.now());
+            if (transferUnitPrice != null) {
+                transferEvent.setUnitPrice(transferUnitPrice);
+            }
+            transferEvent.setNotes("Transfer initiated to " + recipient.getFullName() +
+                    (transferUnitPrice != null ? " at unit price INR " + transferUnitPrice : ""));
+
+            supplyChainService.logSupplyChainEvent(transferEvent);
+        } catch (Exception e) {
+            log.warn("⚠️ Warning: Failed to create TRANSFERRED supply chain event: {}", e.getMessage());
+        }
 
         // Create activity log for sender
         createActivity(currentUserId, sender.getRole().name(), "BATCH_TRANSFERRED",
@@ -327,6 +404,10 @@ public class BatchTransferService {
             receivedEvent.setActorRole(transfer.getRecipientRole());
             receivedEvent.setLocation(currentUserObj.getFullName() + "'s Facility");
             receivedEvent.setTimestamp(java.time.LocalDateTime.now());
+            if (batch.getPricePerUnit() != null) {
+                receivedEvent.setUnitPrice(batch.getPricePerUnit());
+                receivedEvent.setNotes("Transfer received at unit price INR " + batch.getPricePerUnit());
+            }
             
             // Log the supply chain event
             supplyChainService.logSupplyChainEvent(receivedEvent);

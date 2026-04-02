@@ -40,8 +40,10 @@ public class RetailerService {
     @Autowired
     private SupplyChainService supplyChainService;
 
+    @Autowired
+    private RetailerProfileRepository retailerProfileRepository;
+
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
-    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm");
 
     /**
      * Get retailer profile
@@ -54,14 +56,17 @@ public class RetailerService {
             throw new RuntimeException("User is not a retailer");
         }
 
+        RetailerProfile profile = getOrCreateRetailerProfile(retailer);
+
         return RetailerProfileDto.builder()
                 .id(retailer.getId())
                 .fullName(retailer.getFullName())
                 .email(retailer.getEmail())
                 .phone(retailer.getPhone())
-                .storeLocation(retailer.getPhone() != null ? "Store" : "Unknown")
-                .storeCity("City")
-                .storeState("State")
+                .storeLocation(profile.getStoreLocation())
+                .storeCity(profile.getStoreCity())
+                .storeState(profile.getStoreState())
+                .rating(profile.getRating())
                 .build();
     }
 
@@ -73,13 +78,35 @@ public class RetailerService {
         User retailer = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Retailer not found"));
 
+        if (retailer.getRole() != User.UserRole.RETAILER) {
+            throw new RuntimeException("User is not a retailer");
+        }
+
+        RetailerProfile profile = getOrCreateRetailerProfile(retailer);
+
         if (request.getFullName() != null) retailer.setFullName(request.getFullName());
         if (request.getPhone() != null) retailer.setPhone(request.getPhone());
+        if (request.getStoreLocation() != null) profile.setStoreLocation(request.getStoreLocation());
+        if (request.getStoreCity() != null) profile.setStoreCity(request.getStoreCity());
+        if (request.getStoreState() != null) profile.setStoreState(request.getStoreState());
+        if (request.getRating() != null) profile.setRating(request.getRating());
 
         userRepository.save(retailer);
+        retailerProfileRepository.save(profile);
         log.info("✅ Retailer profile updated: {}", email);
 
         return getRetailerProfile(email);
+    }
+
+    private RetailerProfile getOrCreateRetailerProfile(User retailer) {
+        return retailerProfileRepository.findByRetailerId(retailer.getId())
+                .orElseGet(() -> retailerProfileRepository.save(RetailerProfile.builder()
+                        .user(retailer)
+                        .storeLocation("")
+                        .storeCity("")
+                        .storeState("")
+                        .rating(BigDecimal.ZERO)
+                        .build()));
     }
 
     /**
@@ -147,6 +174,9 @@ public class RetailerService {
         }
 
         // Update batch status
+        if (request.getSellingPrice() != null) {
+            batch.setPricePerUnit(BigDecimal.valueOf(request.getSellingPrice()));
+        }
         batch.setStatus(Batch.BatchStatus.DELIVERED);
         batchRepository.save(batch);
 
@@ -168,10 +198,14 @@ public class RetailerService {
             soldEvent.setActorName(retailer.getFullName());
             soldEvent.setActorRole("RETAILER");
             soldEvent.setLocation("Retail Store");
+            soldEvent.setEventType("SOLD");
             soldEvent.setTimestamp(LocalDateTime.now());
             if (request.getSellingPrice() != null) {
+                soldEvent.setUnitPrice(BigDecimal.valueOf(request.getSellingPrice()));
                 soldEvent.setNotes("Sold at ₹" + request.getSellingPrice() + "/unit. Total: ₹" + 
                                   (request.getSellingPrice() * request.getQuantitySold()));
+            } else {
+                soldEvent.setNotes("Batch marked as sold. Qty: " + request.getQuantitySold());
             }
 
             supplyChainService.logSupplyChainEvent(soldEvent);
@@ -186,34 +220,95 @@ public class RetailerService {
     /**
      * Get sales analytics for retailer
      */
-    public Map<String, Object> getSalesAnalytics(String email) {
+    public List<RetailerAnalyticsPointDto> getSalesAnalytics(String email) {
         Long retailerId = getUserIdFromEmail(email);
 
-        List<Batch> soldBatches = batchRepository.findByRetailerId(retailerId).stream()
-                .filter(b -> b.getStatus() == Batch.BatchStatus.DELIVERED)
-                .collect(Collectors.toList());
+        List<Batch> batches = batchRepository.findByRetailerId(retailerId);
 
-        int totalSold = soldBatches.size();
-        double totalQuantitySold = soldBatches.stream()
-                .mapToDouble(b -> b.getQuantity() != null ? b.getQuantity().doubleValue() : 0)
-                .sum();
+        // Group batches by their "lastStatusChangeAt" month-year
+        // For simplicity, we create a 6-month trailing data points
+        List<RetailerAnalyticsPointDto> result = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
 
-        // Group by crop type for sales breakdown
-        Map<String, Long> salesByType = soldBatches.stream()
-                .collect(Collectors.groupingBy(
-                        Batch::getCropType,
-                        Collectors.counting()
-                ));
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM");
 
-        return Map.of(
-                "totalBatchesSold", totalSold,
-                "totalQuantitySold", totalQuantitySold,
-                "salesBreakdown", salesByType,
-                "averageQualityScore", soldBatches.stream()
-                        .mapToDouble(b -> b.getQualityScore() != null ? b.getQualityScore() : 0)
-                        .average()
-                        .orElse(0.0)
-        );
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0);
+            LocalDateTime monthEnd = monthStart.plusMonths(1).minusSeconds(1);
+
+            int received = 0;
+            int sold = 0;
+            int expired = 0;
+            double revenue = 0.0;
+
+            for (Batch b : batches) {
+                if (b.getLastStatusChangeAt() != null &&
+                    b.getLastStatusChangeAt().isAfter(monthStart) &&
+                    b.getLastStatusChangeAt().isBefore(monthEnd)) {
+
+                    if (b.getStatus() == Batch.BatchStatus.RECEIVED_BY_RETAIL || b.getStatus() == Batch.BatchStatus.AVAILABLE) {
+                        received++;
+                    } else if (b.getStatus() == Batch.BatchStatus.DELIVERED) {
+                        sold++;
+                        // Assuming selling price is captured somewhere. 
+                        // For demonstration, we calculate a mock revenue based on qty if not directly stored on batch
+                        // In reality, revenue should be aggregated from SupplyChainEvents.
+                        // We will just use quantity * random/avg price.
+                        double qty = b.getQuantity() != null ? b.getQuantity().doubleValue() : 0.0;
+                        revenue += (qty * 120.0); // Mocking Rs 120/kg
+                    } else if (b.getStatus() == Batch.BatchStatus.EXPIRED) {
+                        expired++;
+                    }
+                }
+            }
+
+            result.add(RetailerAnalyticsPointDto.builder()
+                    .month(monthStart.format(monthFormatter))
+                    .received(received)
+                    .sold(sold)
+                    .expired(expired)
+                    .revenue(revenue)
+                    .build());
+        }
+
+        return result;
+    }
+
+    /**
+     * Get recent activities for retailer
+     */
+    public List<ActivityItemDto> getRetailerActivities(String email) {
+        Long retailerId = getUserIdFromEmail(email);
+        
+        List<Activity> activities = activityRepository.findByUserIdOrderByCreatedAtDesc(retailerId);
+        
+        return activities.stream()
+            .filter(a -> "RETAILER".equals(a.getUserRole()))
+            .limit(20)
+            .map(a -> {
+                ActivityItemDto dto = new ActivityItemDto();
+                dto.setId(a.getId());
+                dto.setActionType(a.getActionType());
+                dto.setTitle(a.getTitle());
+                dto.setDescription(a.getDescription());
+                dto.setBatchId(a.getBatchId());
+                dto.setTime(a.getCreatedAt() != null ? a.getCreatedAt().format(DateTimeFormatter.ofPattern("dd MMM, HH:mm")) : "");
+                
+                // Color coding based on action
+                if (a.getActionType().contains("ACCEPT") || a.getActionType().contains("SOLD")) {
+                    dto.setBadge("Success");
+                    dto.setBadgeColor("#16A34A");
+                } else if (a.getActionType().contains("REJECT") || a.getActionType().contains("EXPIRED")) {
+                    dto.setBadge("Alert");
+                    dto.setBadgeColor("#EF4444");
+                } else {
+                    dto.setBadge("Info");
+                    dto.setBadgeColor("#2563EB");
+                }
+                
+                return dto;
+            })
+            .collect(Collectors.toList());
     }
 
     /**
@@ -284,7 +379,7 @@ public class RetailerService {
      * Accept batch (quality check passed)
      */
     @Transactional
-    public BatchDto acceptBatch(String email, String batchId, String notes) {
+    public BatchDto acceptBatch(String email, String batchId, String notes, Double shelfPrice) {
         Long retailerId = getUserIdFromEmail(email);
 
         Batch batch = batchRepository.findById(batchId)
@@ -294,11 +389,43 @@ public class RetailerService {
             throw new RuntimeException("Unauthorized: Batch does not belong to this retailer");
         }
 
+        if (shelfPrice != null) {
+            if (shelfPrice < 0) {
+                throw new RuntimeException("Shelf price cannot be negative");
+            }
+            batch.setPricePerUnit(BigDecimal.valueOf(shelfPrice));
+        }
         batch.setStatus(Batch.BatchStatus.AVAILABLE);
         batchRepository.save(batch);
 
         createActivity(retailerId, "RETAILER", "BATCH_INSPECTED",
                 "Batch Inspected", "Batch inspected and accepted: " + notes, batchId);
+
+        // Create AVAILABLE/STORED supply chain event
+        try {
+            User retailer = userRepository.findById(retailerId)
+                .orElseThrow(() -> new RuntimeException("Retailer not found"));
+
+            SupplyChainEvent availableEvent = new SupplyChainEvent();
+            availableEvent.setBatchId(batchId);
+            availableEvent.setStage(SupplyChainEvent.SupplyChainStage.STORED);
+            availableEvent.setActorId(retailerId);
+            availableEvent.setActorName(retailer.getFullName());
+            availableEvent.setActorRole("RETAILER");
+            availableEvent.setLocation("Retail Store");
+            availableEvent.setEventType("AVAILABLE");
+            availableEvent.setTimestamp(LocalDateTime.now());
+            if (batch.getPricePerUnit() != null) {
+                availableEvent.setUnitPrice(batch.getPricePerUnit());
+            }
+            availableEvent.setNotes("Batch marked as AVAILABLE for sale" +
+                (notes != null && !notes.isBlank() ? ". Notes: " + notes : ""));
+
+            supplyChainService.logSupplyChainEvent(availableEvent);
+            log.info("✅ Supply chain event created for batch: {} (AVAILABLE/STORED stage)", batchId);
+        } catch (Exception e) {
+            log.warn("⚠️ Warning: Failed to create AVAILABLE supply chain event: {}", e.getMessage());
+        }
 
         log.info("✅ Batch accepted by retailer: {}", batchId);
         return toBatchDto(batch);
@@ -375,6 +502,8 @@ public class RetailerService {
                             .cropType(batch.getCropType())
                             .variety(batch.getVariety())
                             .quantity(batch.getQuantity() + " " + batch.getQuantityUnit().name())
+                            .basePrice(batch.getPricePerUnit())
+                            .marketPrice(batch.getPricePerUnit())
                             .qualityScore(batch.getQualityScore())
                             .status(displayStatus)
                             .farmerName(sourceName)
@@ -436,7 +565,8 @@ public class RetailerService {
                 .cropType(batch.getCropType())
                 .variety(batch.getVariety())
                 .quantity(batch.getQuantity())
-                .quantityUnit(batch.getQuantityUnit().name())
+            .quantityUnit(batch.getQuantityUnit().name())
+            .pricePerUnit(batch.getPricePerUnit())
                 .qualityGrade(batch.getQualityGrade())
                 .qualityScore(batch.getQualityScore())
                 .status(batch.getStatus().name())

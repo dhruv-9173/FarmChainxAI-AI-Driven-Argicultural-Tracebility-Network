@@ -1,8 +1,8 @@
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 20px;
-  margin: 20px 24px 0;
+  margin: 0;
 }
 
 @media (max-width: 900px) {

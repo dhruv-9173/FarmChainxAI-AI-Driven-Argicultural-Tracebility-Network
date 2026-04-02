@@ -13,4 +13,5 @@ public class BatchAcceptRequest {
 
     private String batchId;
     private String inspectionNote;
+    private Double shelfPrice;
 }

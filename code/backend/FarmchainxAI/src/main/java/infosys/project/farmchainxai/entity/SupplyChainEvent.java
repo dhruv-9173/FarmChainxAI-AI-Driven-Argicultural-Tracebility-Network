@@ -7,6 +7,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -60,6 +61,9 @@ public class SupplyChainEvent {
 
     @Column
     private Integer qualityScore; // 0-100
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal unitPrice;
 
     @Column(columnDefinition = "TEXT")
     private String notes;

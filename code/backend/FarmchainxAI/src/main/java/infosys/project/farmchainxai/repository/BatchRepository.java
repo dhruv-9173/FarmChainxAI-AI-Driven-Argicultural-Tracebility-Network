@@ -26,6 +26,10 @@ public interface BatchRepository extends JpaRepository<Batch, String> {
     List<Batch> findByRetailerId(Long retailerId);
     List<Batch> findByRetailerIdAndStatus(Long retailerId, Batch.BatchStatus status);
     List<Batch> findByRetailerIdOrderByCreatedAtDesc(Long retailerId);
+
+    List<Batch> findByCurrentOwnerIdAndCurrentOwnerRoleOrderByUpdatedAtDesc(Long currentOwnerId, String currentOwnerRole);
+
+    List<Batch> findByStatusIn(List<Batch.BatchStatus> statuses);
 }
 
 

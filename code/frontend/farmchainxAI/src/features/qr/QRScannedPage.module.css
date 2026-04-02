@@ -1329,11 +1329,48 @@
 .reviewForm {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   padding: 16px;
-  background: var(--surface);
+  background: linear-gradient(180deg, #fcfbf8 0%, #f5f3ef 100%);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-soft);
+}
+
+.reviewSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.reviewCount {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.reviewFormTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reviewHint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.charCount {
+  font-family: "DM Mono", monospace;
+  font-size: 0.72rem;
+  color: #9ca3af;
+  letter-spacing: 0.04em;
 }
 
 .reviewTextarea {
@@ -1418,6 +1455,16 @@
   background: var(--green-pale);
   border-radius: var(--radius-sm);
   border: 1px solid #bbf7d0;
+}
+
+.reviewError {
+  font-size: 0.82rem;
+  color: #b91c1c;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border-radius: var(--radius-sm);
+  border: 1px solid #fecaca;
 }
 
 .reviewsList {

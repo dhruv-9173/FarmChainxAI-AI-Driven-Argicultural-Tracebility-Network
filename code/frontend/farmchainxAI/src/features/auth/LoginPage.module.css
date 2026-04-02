@@ -42,8 +42,12 @@
 
 .brand {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
+}
+
+.brandIcon {
+  font-size: 1.5rem;
 }
 
 .brandText {
@@ -96,30 +100,37 @@
 /* ── Glassmorphism Card ─────────────────────────────── */
 .card {
   width: 100%;
-  max-width: 410px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 36px 38px 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 24px;
+  padding: 0 0 32px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.cardTopAccent {
+  height: 5px;
+  background: linear-gradient(90deg, #16a34a, #2563eb, #7c3aed);
+  width: 100%;
+  margin-bottom: 28px;
 }
 
 .cardTitle {
-  font-size: 1.65rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: #111;
-  margin: 0 0 4px;
+  color: #0f172a;
+  margin: 0 38px 4px;
   letter-spacing: -0.02em;
 }
 
 .cardSubtitle {
   font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0 0 28px;
+  color: #64748b;
+  margin: 0 38px 24px;
 }
 
-/* ── API Error ──────────────────────────────────────── */
 .apiError {
   display: flex;
   align-items: center;
@@ -131,14 +142,50 @@
   color: #b91c1c;
   font-size: 0.8125rem;
   font-weight: 500;
-  margin-bottom: 18px;
+  margin: 0 38px 18px;
 }
 
-/* ── Form ───────────────────────────────────────────── */
+/* ── Google OAuth Button ─────────────────── */
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: calc(100% - 76px);
+  margin: 0 38px 20px;
+  padding: 13px 20px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.googleBtn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+
+.googleBtn:active {
+  transform: translateY(0);
+}
+
+/* ── Form (inside padded card) ─────────────────── */
+.form {
+  padding: 0 38px;
+}
+
 .form {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  padding: 0 38px;
 }
 
 /* ── Options Row ────────────────────────────────────── */
@@ -182,31 +229,31 @@
 /* ── Login Button ───────────────────────────────────── */
 .loginBtn {
   width: 100%;
-  padding: 13px;
-  background: #1f2a44;
+  padding: 14px;
+  background: linear-gradient(135deg, #1e3a5f, #16304a);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-  box-shadow: 0 4px 14px rgba(31, 42, 68, 0.3);
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(30, 58, 95, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  margin-top: 6px;
+  min-height: 50px;
+  margin-top: 8px;
 }
 
 .loginBtn:hover:not(:disabled) {
-  background: #16203a;
-  box-shadow: 0 6px 20px rgba(31, 42, 68, 0.4);
+  box-shadow: 0 6px 24px rgba(30, 58, 95, 0.5);
+  transform: translateY(-1px);
 }
 
 .loginBtn:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translateY(0);
 }
 
 .loginBtn:disabled {
@@ -236,59 +283,36 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 28px 0 20px;
+  margin: 0 38px 20px;
 }
 
 .dividerLine {
   flex: 1;
   height: 1px;
-  background: #d1d5db;
+  background: #e2e8f0;
 }
 
 .dividerText {
-  font-size: 0.8125rem;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #94a3b8;
   white-space: nowrap;
-}
-
-/* ── Social Buttons ─────────────────────────────────── */
-.socialRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.socialBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 11px 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  background: #f3f4f6;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-.socialBtn:hover {
-  background: #e5e7eb;
-  border-color: #d1d5db;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ── Sign-up text ───────────────────────────────────── */
+/* (social buttons replaced by Google primary CTA above) */
+
 .signupText {
   text-align: center;
   font-size: 0.8125rem;
-  color: #6b7280;
-  margin: 24px 0 0;
+  color: #64748b;
+  margin: 20px 38px 0;
 }
 
 .signupLink {
-  color: #1f2a44;
+  color: #2563eb;
   font-weight: 700;
   text-decoration: none;
   transition: color 0.2s;
@@ -296,6 +320,7 @@
 
 .signupLink:hover {
   text-decoration: underline;
+  color: #1d4ed8;
 }
 
 /* ── Responsive ─────────────────────────────────────── */
@@ -305,10 +330,15 @@
   }
 
   .card {
-    padding: 28px 22px 24px;
+    border-radius: 20px;
   }
 
-  .socialRow {
-    grid-template-columns: 1fr;
+  .googleBtn,
+  .form,
+  .dividerRow,
+  .signupText {
+    margin-left: 22px;
+    margin-right: 22px;
+    width: calc(100% - 44px);
   }
 }

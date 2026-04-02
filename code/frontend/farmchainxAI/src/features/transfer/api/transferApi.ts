@@ -24,6 +24,7 @@ export interface InitiateBatchTransferRequest {
   recipientId: number;
   recipientRole: TransferRole;
   note?: string;
+  transferPrice?: number;
 }
 
 export interface BatchTransferResponse {
@@ -70,10 +71,9 @@ export const assertTransferRoleAllowed = (
 export const getRecipientsByRole = async (
   role: TransferRole
 ): Promise<TransferRecipientDto[]> => {
-  const response = await apiClient.get<ApiResponseWrapper<TransferRecipientDto[]>>(
-    "/transfers/recipients",
-    { params: { role } }
-  );
+  const response = await apiClient.get<
+    ApiResponseWrapper<TransferRecipientDto[]>
+  >("/transfers/recipients", { params: { role } });
   return unwrap(response.data);
 };
 
@@ -81,20 +81,18 @@ export const searchUsers = async (
   role: TransferRole,
   query: string
 ): Promise<TransferRecipientDto[]> => {
-  const response = await apiClient.get<ApiResponseWrapper<TransferRecipientDto[]>>(
-    "/transfers/search",
-    { params: { role, query } }
-  );
+  const response = await apiClient.get<
+    ApiResponseWrapper<TransferRecipientDto[]>
+  >("/transfers/search", { params: { role, query } });
   return unwrap(response.data);
 };
 
 export const initiateBatchTransfer = async (
   request: InitiateBatchTransferRequest
 ): Promise<BatchTransferResponse> => {
-  const response = await apiClient.post<ApiResponseWrapper<BatchTransferResponse>>(
-    "/transfers/initiate",
-    request
-  );
+  const response = await apiClient.post<
+    ApiResponseWrapper<BatchTransferResponse>
+  >("/transfers/initiate", request);
   return unwrap(response.data);
 };
 
@@ -116,10 +114,9 @@ export const acceptTransfer = async (
   transferId: string,
   inspectionNote?: string
 ): Promise<BatchTransferResponse> => {
-  const response = await apiClient.post<ApiResponseWrapper<BatchTransferResponse>>(
-    `/transfers/${transferId}/accept`,
-    { inspectionNote }
-  );
+  const response = await apiClient.post<
+    ApiResponseWrapper<BatchTransferResponse>
+  >(`/transfers/${transferId}/accept`, { inspectionNote });
   return unwrap(response.data);
 };
 
@@ -127,18 +124,17 @@ export const rejectTransfer = async (
   transferId: string,
   rejectionReason?: string
 ): Promise<BatchTransferResponse> => {
-  const response = await apiClient.post<ApiResponseWrapper<BatchTransferResponse>>(
-    `/transfers/${transferId}/reject`,
-    { rejectionReason }
-  );
+  const response = await apiClient.post<
+    ApiResponseWrapper<BatchTransferResponse>
+  >(`/transfers/${transferId}/reject`, { rejectionReason });
   return unwrap(response.data);
 };
 
 export const cancelTransfer = async (
   transferId: string
 ): Promise<BatchTransferResponse> => {
-  const response = await apiClient.delete<ApiResponseWrapper<BatchTransferResponse>>(
-    `/transfers/${transferId}`
-  );
+  const response = await apiClient.delete<
+    ApiResponseWrapper<BatchTransferResponse>
+  >(`/transfers/${transferId}`);
   return unwrap(response.data);
 };

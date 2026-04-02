@@ -32,6 +32,9 @@ public class ConsumerService {
     @Autowired
     private ActivityRepository activityRepository;
 
+        @Autowired
+        private RetailerProfileRepository retailerProfileRepository;
+
     @Autowired
     private SupplyChainService supplyChainService;
 
@@ -95,7 +98,9 @@ public class ConsumerService {
                 .orElseThrow(() -> new RuntimeException("Batch not found"));
 
         // Update batch with consumer info
-        batch.setRetailerId(consumerId); // Track consumer as "retailer" for now
+        batch.setRetailerId(consumerId); // Backward compatibility for older views
+        batch.setCurrentOwnerId(consumerId);
+        batch.setCurrentOwnerRole("CONSUMER");
         batch.setStatus(Batch.BatchStatus.DELIVERED);
         batchRepository.save(batch);
 
@@ -204,12 +209,89 @@ public class ConsumerService {
     public List<BatchDto> getMyProducts(String email) {
         Long consumerId = getUserIdFromEmail(email);
 
-        List<Batch> batches = batchRepository.findByRetailerId(consumerId);
+        List<Batch> batches = batchRepository
+                .findByCurrentOwnerIdAndCurrentOwnerRoleOrderByUpdatedAtDesc(consumerId, "CONSUMER");
 
         return batches.stream()
                 .map(this::toBatchDto)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Get retailer products currently available for consumers to purchase.
+     */
+        public List<ConsumerAvailableProductDto> getAvailableProducts(String email, String search) {
+        User consumer = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Consumer not found"));
+
+        if (consumer.getRole() != User.UserRole.CONSUMER) {
+            throw new RuntimeException("User is not a consumer");
+        }
+
+        List<Batch> availableBatches = batchRepository.findByStatusIn(List.of(
+                Batch.BatchStatus.AVAILABLE,
+                Batch.BatchStatus.LOW_STOCK
+        ));
+
+        String normalizedSearch = search == null ? "" : search.trim().toLowerCase();
+
+        return availableBatches.stream()
+                .filter(batch -> batch.getRetailerId() != null)
+                .sorted(Comparator.comparing(Batch::getUpdatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .map(batch -> {
+                    User retailer = userRepository.findById(batch.getRetailerId()).orElse(null);
+                    RetailerProfile retailerProfile = retailerProfileRepository
+                            .findByRetailerId(batch.getRetailerId())
+                            .orElse(null);
+
+                    String retailerName = retailer != null && retailer.getFullName() != null
+                            ? retailer.getFullName()
+                            : "Retailer";
+
+                    return ConsumerAvailableProductDto.builder()
+                            .id(batch.getId())
+                            .cropType(batch.getCropType())
+                            .variety(batch.getVariety())
+                            .cropImageUrl(batch.getCropImageUrl())
+                            .quantity(batch.getQuantity())
+                            .quantityUnit(batch.getQuantityUnit() != null ? batch.getQuantityUnit().name() : null)
+                            .pricePerUnit(batch.getPricePerUnit())
+                            .qualityScore(batch.getQualityScore())
+                            .status(mapBatchStatusToDisplay(batch.getStatus()))
+                            .retailerName(retailerName)
+                            .retailerShopName(retailerName + "'s Store")
+                            .retailerPhone(retailer != null ? retailer.getPhone() : null)
+                            .retailerEmail(retailer != null ? retailer.getEmail() : null)
+                            .retailerAddress(retailerProfile != null ? retailerProfile.getStoreLocation() : null)
+                            .retailerCity(retailerProfile != null ? retailerProfile.getStoreCity() : null)
+                            .retailerState(retailerProfile != null ? retailerProfile.getStoreState() : null)
+                            .build();
+                })
+                                .filter(product -> matchesSearch(product, normalizedSearch))
+                .collect(Collectors.toList());
+    }
+
+        private boolean matchesSearch(ConsumerAvailableProductDto product, String normalizedSearch) {
+                if (normalizedSearch.isEmpty()) {
+                        return true;
+                }
+
+                String searchable = String.join(" ",
+                                safe(product.getId()),
+                                safe(product.getCropType()),
+                                safe(product.getVariety()),
+                                safe(product.getRetailerName()),
+                                safe(product.getRetailerShopName()),
+                                safe(product.getRetailerCity()),
+                                safe(product.getRetailerState())
+                ).toLowerCase();
+
+                return searchable.contains(normalizedSearch);
+        }
+
+        private String safe(String value) {
+                return value == null ? "" : value;
+        }
 
     /**
      * Get my reviews
@@ -316,19 +398,32 @@ public class ConsumerService {
                 .cropType(batch.getCropType())
                 .variety(batch.getVariety())
                 .quantity(batch.getQuantity())
-                .quantityUnit(batch.getQuantityUnit().name())
+                                .quantityUnit(batch.getQuantityUnit() != null ? batch.getQuantityUnit().name() : null)
+                .pricePerUnit(batch.getPricePerUnit())
                 .qualityGrade(batch.getQualityGrade())
                 .qualityScore(batch.getQualityScore())
-                .status(batch.getStatus().name())
+                                .status(batch.getStatus() != null ? batch.getStatus().name() : null)
                 .farmCity(batch.getFarmCity())
                 .farmState(batch.getFarmState())
                 .storageType(batch.getStorageType())
                 .currentShelfLifeDays(batch.getCurrentShelfLifeDays())
                 .organic(batch.getOrganic())
                 .certifications(batch.getCertifications())
+                                .cropImageUrl(batch.getCropImageUrl())
                 .qrCodeUrl(batch.getQrCodeUrl())
                 .build();
     }
+
+        private String mapBatchStatusToDisplay(Batch.BatchStatus status) {
+                if (status == null) return "Unknown";
+                return switch (status) {
+                        case AVAILABLE -> "Available";
+                        case LOW_STOCK -> "Low Stock";
+                        case DELIVERED -> "Sold Out";
+                        case EXPIRED -> "Expired";
+                        default -> status.name();
+                };
+        }
 
 
 }

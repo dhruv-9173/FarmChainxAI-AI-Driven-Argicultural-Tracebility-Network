@@ -45,6 +45,9 @@ public class Batch {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal quantity;
 
+    @Column(precision = 12, scale = 2)
+    private BigDecimal pricePerUnit;
+
     @Column
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -156,7 +159,7 @@ public class Batch {
     @Column
     private String qrCodeUrl;
 
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String cropImageUrl;
 
     @Column(columnDefinition = "TEXT")

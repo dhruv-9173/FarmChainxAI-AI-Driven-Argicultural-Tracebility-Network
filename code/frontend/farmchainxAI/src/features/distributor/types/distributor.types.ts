@@ -122,6 +122,9 @@ export interface FarmerListing {
 }
 
 export interface KpiCard {
+  title?: string;
+  subtitle?: string;
+  trendValue?: string;
   label: string;
   value: string;
   change: string;

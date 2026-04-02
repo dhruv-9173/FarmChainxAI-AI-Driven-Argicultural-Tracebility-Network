@@ -243,9 +243,12 @@ public class BrowseController {
                     .batchId(batchId)
                     .rating(request.getRating())
                     .comment(request.getComment().trim())
+                    .userId(0L)
+                    .userDisplayName("Anonymous")
+                    .userRole("ANONYMOUS")
                     .build();
 
-            // If authenticated, add user details
+            // If an authenticated real user is available, overwrite anonymous defaults
             if (authentication != null && authentication.isAuthenticated()) {
                 Optional<User> user = userRepository.findByEmail(authentication.getName());
                 if (user.isPresent()) {
@@ -253,9 +256,6 @@ public class BrowseController {
                     review.setUserDisplayName(user.get().getFullName() != null ? user.get().getFullName() : "Anonymous");
                     review.setUserRole(user.get().getRole().name());
                 }
-            } else {
-                // Anonymous review
-                review.setUserDisplayName("Anonymous");
             }
 
             Review saved = reviewRepository.save(review);

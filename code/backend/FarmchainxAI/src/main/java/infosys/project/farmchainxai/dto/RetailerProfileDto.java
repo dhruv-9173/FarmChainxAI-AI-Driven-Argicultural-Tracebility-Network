@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,4 +19,5 @@ public class RetailerProfileDto {
     private String storeLocation;
     private String storeCity;
     private String storeState;
+    private BigDecimal rating;
 }

@@ -1,5 +1,6 @@
 package infosys.project.farmchainxai.service;
 
+
 import infosys.project.farmchainxai.dto.*;
 import infosys.project.farmchainxai.entity.*;
 import infosys.project.farmchainxai.repository.*;
@@ -85,6 +86,7 @@ public class FarmerService {
                         ? LocalDate.parse(request.getSowingDate()) : null)
                 .harvestDate(request.getHarvestDate() != null
                         ? LocalDate.parse(request.getHarvestDate()) : null)
+                .cropImageUrl(resolveCropImageData(request))
                 // ── Persist the QR URL to DB ───────────────────────────────
                 .qrCodeUrl(qrResult.traceUrl())
                 // ──────────────────────────────────────────────────────────
@@ -283,6 +285,40 @@ public class FarmerService {
         dto.setQrCodeBase64(qrResult.base64Image()); // data:image/png;base64,...
         
         return dto;
+    }
+
+    @Transactional
+    public BatchDto markBatchAsHarvested(String email, String batchId) {
+        Long userId = getUserIdFromEmail(email);
+
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
+
+        if (!userId.equals(batch.getFarmerId())) {
+            throw new RuntimeException("Unauthorized: Batch does not belong to current farmer");
+        }
+
+        if (batch.getStatus() != Batch.BatchStatus.CREATED) {
+            throw new RuntimeException("Only CREATED batches can be marked as HARVESTED. Current status: " + batch.getStatus());
+        }
+
+        batch.setStatus(Batch.BatchStatus.HARVESTED);
+        batch.setLastStatusChangeAt(java.time.LocalDateTime.now());
+        batch.setLastStatusChangedBy(userId);
+
+        Batch saved = batchRepository.save(batch);
+
+        createActivity(userId, "BATCH_HARVESTED", "Batch Harvested",
+                "Batch marked as harvested: " + batchId, batchId);
+
+        notificationService.createNotification(userId, new CreateNotificationRequest(
+                "BATCH_UPDATED",
+                "Batch Marked as Harvested",
+                "Your batch " + batchId + " is now HARVESTED and ready for transfer.",
+                batchId
+        ));
+
+        return mapToBatchDto(saved);
     }
 
 
@@ -486,6 +522,7 @@ public class FarmerService {
                 .variety(batch.getVariety())
                 .quantity(batch.getQuantity())
                 .quantityUnit(batch.getQuantityUnit() != null ? batch.getQuantityUnit().name() : null)
+                .pricePerUnit(batch.getPricePerUnit())
                 .qualityScore(batch.getQualityScore())
                 .qualityGrade(batch.getQualityGrade())
                 .status(batch.getStatus() != null ? batch.getStatus().name() : null)
@@ -506,9 +543,24 @@ public class FarmerService {
                 .createdAt(batch.getCreatedAt())
                 .updatedAt(batch.getUpdatedAt())
                 .notes(batch.getNotes())
+                .cropImageUrl(batch.getCropImageUrl())
                 .qrCodeUrl(batch.getQrCodeUrl()) // The trace URL (also stored in DB)
                 // qrCodeBase64 is intentionally NOT set here — set it only after generation
                 .build();
+    }
+
+    private String resolveCropImageData(CreateBatchRequest request) {
+        if (request.getCropImageBase64() != null && !request.getCropImageBase64().isBlank()) {
+            String imageData = request.getCropImageBase64();
+            if (imageData.length() > 10_000_000) {
+                throw new RuntimeException("Crop image is too large. Please upload an image smaller than 7 MB.");
+            }
+            return imageData;
+        }
+        if (request.getCropImageUrl() != null && !request.getCropImageUrl().isBlank()) {
+            return request.getCropImageUrl();
+        }
+        return null;
     }
 
     private FarmDetailsDto mapToFarmDetailsDto(FarmDetails farmDetails) {

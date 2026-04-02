@@ -1,11 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import styles from "./RetailerQuickActions.module.css";
 
-interface Props {
-  pendingCount?: number;
-}
-
-export default function RetailerQuickActions({ pendingCount = 0 }: Props) {
+export default function RetailerQuickActions() {
   const navigate = useNavigate();
   return (
     <div className={styles.section}>

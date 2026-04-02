@@ -56,14 +56,14 @@ export default function StepChooseBatch({
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        Select a batch that has been received or passed quality check to transfer.
+        Select a batch that has passed quality check to transfer.
       </div>
 
       {batches.length === 0 ? (
         <div className={styles.emptyState}>
           <p>No batches available for transfer.</p>
           <p style={{ fontSize: "0.8rem", marginTop: 4 }}>
-            Only batches that are "RECEIVED_BY_DIST" or "QUALITY_PASSED" can be transferred.
+            Only batches with "QUALITY_PASSED" status can be transferred.
           </p>
         </div>
       ) : (

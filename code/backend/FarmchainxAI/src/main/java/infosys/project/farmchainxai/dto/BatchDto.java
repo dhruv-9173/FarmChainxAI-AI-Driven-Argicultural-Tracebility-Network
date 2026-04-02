@@ -21,6 +21,7 @@ public class BatchDto {
     private String variety;
     private BigDecimal quantity;
     private String quantityUnit;
+    private BigDecimal pricePerUnit;
     private Integer qualityScore;
     private String qualityGrade;
     private String status;
@@ -52,6 +53,9 @@ public class BatchDto {
 
     // Notes
     private String notes;
+
+    // Crop image payload (URL or base64 data URI)
+    private String cropImageUrl;
 
     // ── QR Code Fields ──────────────────────────────────────────────────────
     /** The full traceability URL encoded inside the QR (e.g. https://trace.farmchain.ai/batch/BCH-xxx) */

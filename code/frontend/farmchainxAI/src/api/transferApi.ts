@@ -215,9 +215,9 @@ export const cancelTransfer = async (
 };
 
 /**
- * GET /farmer/batches?status=ACTIVE
- * Get active batches available for transfer
- * @param status - Optional status filter (defaults to ACTIVE)
+ * GET /farmer/batches?status=HARVESTED
+ * Get harvested batches available for transfer
+ * @param status - Optional status filter (defaults to HARVESTED)
  * @param page - Page number for pagination
  * @param limit - Number of items per page
  */
@@ -227,7 +227,8 @@ export const getTransferableBatches = async (
   limit: number = 20
 ): Promise<TransferableBatch[]> => {
   try {
-    const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const userStr =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
     const role = userStr ? JSON.parse(userStr).role : "FARMER";
 
     if (role?.toUpperCase() === "DISTRIBUTOR") {
@@ -235,16 +236,15 @@ export const getTransferableBatches = async (
       const res = await apiClient.get("/distributor/batches/received");
       const data = res.data.data;
       if (Array.isArray(data)) {
-        // Backend allows RECEIVED_BY_DIST and QUALITY_PASSED to be transferred.
-        // If a specific status is requested, honour it; otherwise show both eligible statuses.
-        const TRANSFERABLE_DIST_STATUSES: string[] = ["RECEIVED_BY_DIST", "QUALITY_PASSED", "ACCEPTED"];
+        // Only quality-checked batches are eligible for distributor transfer.
+        const TRANSFERABLE_DIST_STATUSES: string[] = ["QUALITY_PASSED"];
         const allowedStatuses: string[] = status
           ? [(status as string).toUpperCase()]
           : TRANSFERABLE_DIST_STATUSES;
         return data
           .filter((b: Record<string, unknown>) => {
-             const bStatus = String(b.status || "").toUpperCase();
-             return allowedStatuses.includes(bStatus);
+            const bStatus = String(b.status || "").toUpperCase();
+            return allowedStatuses.includes(bStatus);
           })
           .map((b: Record<string, unknown>): TransferableBatch => {
             // DistributorBatchDto.quantity is a formatted string like "2,400 kg"
@@ -253,7 +253,10 @@ export const getTransferableBatches = async (
             const numericQty = parseFloat(rawQty.replace(/[^0-9.]/g, "")) || 0;
             // Extract unit from quantity string (default kg)
             const unitMatch = rawQty.match(/\b(kg|ton|quintal)\b/i);
-            const unit = (unitMatch ? unitMatch[1].toLowerCase() : "kg") as "kg" | "ton" | "quintal";
+            const unit = (unitMatch ? unitMatch[1].toLowerCase() : "kg") as
+              | "kg"
+              | "ton"
+              | "quintal";
 
             return {
               id: String(b.id ?? ""),
@@ -268,7 +271,8 @@ export const getTransferableBatches = async (
               farmState: undefined,
               expectedShelfLifeDays: Number(b.shelfLifeDays ?? 30),
               currentShelfLifeDays: Math.round(
-                (Number(b.shelfLifePercent ?? 100) / 100) * Number(b.shelfLifeDays ?? 30)
+                (Number(b.shelfLifePercent ?? 100) / 100) *
+                  Number(b.shelfLifeDays ?? 30)
               ),
               organic: Boolean(b.organic ?? false),
               gapCertified: false,
@@ -282,7 +286,7 @@ export const getTransferableBatches = async (
     }
 
     // Default to FARMER
-    const targetStatus = status || "ACTIVE";
+    const targetStatus = status || "HARVESTED";
     const res: AxiosResponse<
       ApiResponseWrapper<{
         content: TransferableBatch[];

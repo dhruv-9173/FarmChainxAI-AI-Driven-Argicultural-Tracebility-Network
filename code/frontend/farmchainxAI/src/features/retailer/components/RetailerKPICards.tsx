@@ -48,7 +48,7 @@ function KPICard({
 
 export default function RetailerKPICards({ batches }: Props) {
   const total = batches.length;
-  const incoming = batches.filter((b) => b.status === "Incoming").length;
+  const incoming = batches.filter((b) => b.status === "Accepted").length;
   const inStock = batches.filter(
     (b) =>
       b.status === "Available" ||
@@ -81,7 +81,7 @@ export default function RetailerKPICards({ batches }: Props) {
       <KPICard
         label="Total Batches"
         value={total}
-        sub={`${inStock} in stock, ${incoming} incoming`}
+        sub={`${inStock} in stock, ${incoming} awaiting shelfing`}
         color="#16A34A"
         icon="📦"
         trend={{ direction: "up", percent: 12 }}

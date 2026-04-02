@@ -3,13 +3,17 @@ package infosys.project.farmchainxai.service;
 import infosys.project.farmchainxai.dto.*;
 import infosys.project.farmchainxai.entity.FarmDetails;
 import infosys.project.farmchainxai.entity.FarmerProfile;
+import infosys.project.farmchainxai.entity.DistributorProfile;
 import infosys.project.farmchainxai.entity.OtpToken;
+import infosys.project.farmchainxai.entity.RetailerProfile;
 import infosys.project.farmchainxai.entity.RefreshToken;
 import infosys.project.farmchainxai.entity.User;
+import infosys.project.farmchainxai.repository.DistributorProfileRepository;
 import infosys.project.farmchainxai.repository.FarmDetailsRepository;
 import infosys.project.farmchainxai.repository.FarmerProfileRepository;
 import infosys.project.farmchainxai.repository.OtpTokenRepository;
 import infosys.project.farmchainxai.repository.RefreshTokenRepository;
+import infosys.project.farmchainxai.repository.RetailerProfileRepository;
 import infosys.project.farmchainxai.repository.UserRepository;
 import infosys.project.farmchainxai.util.JwtUtil;
 import infosys.project.farmchainxai.util.OtpUtil;
@@ -19,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Service
@@ -48,6 +53,12 @@ public class AuthService {
 
     @Autowired
     private FarmDetailsRepository farmDetailsRepository;
+
+    @Autowired
+    private DistributorProfileRepository distributorProfileRepository;
+
+    @Autowired
+    private RetailerProfileRepository retailerProfileRepository;
 
     // ────────────────────────────────────────────────────────────────────────────
     // REGISTRATION
@@ -103,6 +114,36 @@ public class AuthService {
             farmerProfile.setFarmDetails(farmDetails);
             farmDetailsRepository.saveAndFlush(farmDetails);
             log.info("Farm details stub created for farmer: {} with farmId: {}", request.getEmail(), farmId);
+        }
+
+        if (User.UserRole.DISTRIBUTOR.equals(user.getRole())) {
+            DistributorProfile distributorProfile = DistributorProfile.builder()
+                    .user(user)
+                    .companyName("FarmChain Distribution")
+                    .companyId("COM-" + user.getId())
+                    .warehouseLocation("Pune, Maharashtra")
+                    .gstNumber("27AAPPL3100A2ZN")
+                    .licenseNumber("LIC-2024-" + user.getId())
+                    .operationalArea("Entire Maharashtra")
+                    .warehouseCapacity("100,000 kg")
+                    .establishedYear("2020")
+                    .rating(BigDecimal.ZERO)
+                    .profileImageUrl("/api/avatars/default.png")
+                    .build();
+            distributorProfileRepository.saveAndFlush(distributorProfile);
+            log.info("Distributor profile created for user: {}", request.getEmail());
+        }
+
+        if (User.UserRole.RETAILER.equals(user.getRole())) {
+            RetailerProfile retailerProfile = RetailerProfile.builder()
+                    .user(user)
+                    .storeLocation("")
+                    .storeCity("")
+                    .storeState("")
+                    .rating(BigDecimal.ZERO)
+                    .build();
+            retailerProfileRepository.saveAndFlush(retailerProfile);
+            log.info("Retailer profile created for user: {}", request.getEmail());
         }
 
         // Generate and send OTP for email verification

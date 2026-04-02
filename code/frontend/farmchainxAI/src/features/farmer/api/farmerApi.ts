@@ -22,6 +22,24 @@ interface ApiResponseWrapper<T> {
   data: T | null;
 }
 
+export interface TransferReceiptDto {
+  transferId: string;
+  batchId: string;
+  status: string;
+  senderName: string;
+  senderRole: string;
+  recipientName: string;
+  recipientRole: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  cropType: string;
+  quantity: number;
+  quantityUnit?: string;
+  transferNote?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CreateBatchPayload {
   cropType: string;
   cropVariety: string;
@@ -43,6 +61,7 @@ export interface CreateBatchPayload {
   sowingDate: string;
   harvestDate: string;
   notes?: string;
+  cropImageBase64?: string;
 }
 
 export interface FarmerBatchDto {
@@ -72,6 +91,7 @@ export interface FarmerBatchDto {
   createdAt: string;
   updatedAt: string;
   notes?: string;
+  cropImageUrl?: string;
   basePrice?: number;
   marketPrice?: number;
   qrCodeUrl?: string;
@@ -114,6 +134,34 @@ export const getFarmerBatchById = async (batchId: string): Promise<Batch> => {
   const res = await apiClient.get<{ data: Batch }>(
     `/farmer/batches/${batchId}`
   );
+  return res.data.data;
+};
+
+/** PATCH /farmer/batches/:id/harvest */
+export const markBatchAsHarvested = async (batchId: string): Promise<Batch> => {
+  const res = await apiClient.patch<ApiResponseWrapper<Batch>>(
+    `/farmer/batches/${batchId}/harvest`
+  );
+
+  if (!res.data.success || !res.data.data) {
+    throw new Error(res.data.message || "Failed to mark batch as harvested");
+  }
+
+  return res.data.data;
+};
+
+/** GET /transfers/batches/:id/receipt */
+export const getBatchTransferReceipt = async (
+  batchId: string
+): Promise<TransferReceiptDto> => {
+  const res = await apiClient.get<ApiResponseWrapper<TransferReceiptDto>>(
+    `/transfers/batches/${batchId}/receipt`
+  );
+
+  if (!res.data.success || !res.data.data) {
+    throw new Error(res.data.message || "Failed to fetch transfer receipt");
+  }
+
   return res.data.data;
 };
 

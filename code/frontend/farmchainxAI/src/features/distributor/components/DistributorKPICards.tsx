@@ -8,7 +8,7 @@ interface Props {
 export default function DistributorKPICards({ batches }: Props) {
   const totalReceived = batches.length;
   const pendingAcceptance = batches.filter(
-    (b) => b.status === "Incoming"
+    (b) => b.status === "RECEIVED_BY_DIST"
   ).length;
   const transferredOut = batches.filter(
     (b) => b.status === "Transferred" || b.status === "In Transit"
@@ -76,4 +76,3 @@ export default function DistributorKPICards({ batches }: Props) {
     </div>
   );
 }
-

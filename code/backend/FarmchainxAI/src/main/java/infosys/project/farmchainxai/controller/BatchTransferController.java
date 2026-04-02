@@ -230,5 +230,27 @@ public class BatchTransferController {
                     ));
         }
     }
+
+    @GetMapping("/batches/{batchId}/receipt")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getBatchTransferReceipt(
+            Authentication authentication,
+            @PathVariable String batchId) {
+        try {
+            Long userId = getUserIdFromAuth(authentication);
+            Map<String, Object> receipt = batchTransferService.getLatestTransferReceiptForFarmer(userId, batchId);
+            return ResponseEntity.ok(new ApiResponse<>(
+                    "Transfer receipt retrieved successfully",
+                    receipt,
+                    true
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(
+                            "Failed to retrieve transfer receipt: " + e.getMessage(),
+                            null,
+                            false
+                    ));
+        }
+    }
 }
 

@@ -79,6 +79,24 @@ public class ConsumerController {
     }
 
     /**
+     * GET /api/v1/consumer/products/available
+     * Get all retailer products currently available for consumers to buy.
+     */
+    @GetMapping("/products/available")
+    public ResponseEntity<ApiResponse<List<ConsumerAvailableProductDto>>> getAvailableProducts(
+            Authentication authentication,
+            @RequestParam(required = false) String search) {
+        try {
+            String email = authentication.getName();
+            List<ConsumerAvailableProductDto> products = consumerService.getAvailableProducts(email, search);
+            return ResponseEntity.ok(new ApiResponse<>("Available products retrieved successfully", products, true));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Failed to retrieve available products: " + e.getMessage(), null, false));
+        }
+    }
+
+    /**
      * POST /api/v1/consumer/products/{batchId}/receive
      * Record product receipt (purchase at retail store)
      */

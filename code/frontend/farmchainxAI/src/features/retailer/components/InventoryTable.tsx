@@ -4,28 +4,54 @@ import type {
   RetailerBatch,
   RetailerBatchStatus,
 } from "../types/retailer.types";
-import BatchDetailsModal from "../../../components/common/BatchDetailsModal";
-import type { BatchDetail } from "../../../components/common/BatchDetailsModal";
 import styles from "./InventoryTable.module.css";
 
 interface Props {
   batches: RetailerBatch[];
-  onStatusChange: (
-    batch: RetailerBatch,
-    newStatus: RetailerBatchStatus
-  ) => void;
+  onShelve: (batch: RetailerBatch) => void;
+  onMarkSold: (batch: RetailerBatch) => void;
 }
 
 const STATUS_CONFIG: Record<
   RetailerBatchStatus,
-  { dot: string; bg: string; color: string }
+  { dot: string; bg: string; color: string; label: string }
 > = {
-  Accepted: { dot: "#16A34A", bg: "#F0FDF4", color: "#166534" },
-  Available: { dot: "#0891B2", bg: "#ECFEFF", color: "#0E7490" },
-  "Low Stock": { dot: "#EA580C", bg: "#FFF7ED", color: "#C2410C" },
-  "Sold Out": { dot: "#6B7280", bg: "#F9FAFB", color: "#374151" },
-  Expired: { dot: "#EF4444", bg: "#FEF2F2", color: "#991B1B" },
-  Rejected: { dot: "#EF4444", bg: "#FEF2F2", color: "#991B1B" },
+  Accepted: {
+    dot: "#16A34A",
+    bg: "#F0FDF4",
+    color: "#166534",
+    label: "Accepted",
+  },
+  Available: {
+    dot: "#0891B2",
+    bg: "#ECFEFF",
+    color: "#0E7490",
+    label: "In Stock",
+  },
+  "Low Stock": {
+    dot: "#EA580C",
+    bg: "#FFF7ED",
+    color: "#C2410C",
+    label: "Low Stock",
+  },
+  "Sold Out": {
+    dot: "#6B7280",
+    bg: "#F9FAFB",
+    color: "#374151",
+    label: "Sold Out",
+  },
+  Expired: {
+    dot: "#EF4444",
+    bg: "#FEF2F2",
+    color: "#991B1B",
+    label: "Expired",
+  },
+  Rejected: {
+    dot: "#EF4444",
+    bg: "#FEF2F2",
+    color: "#991B1B",
+    label: "Rejected",
+  },
 };
 
 const FILTER_OPTIONS = [
@@ -38,7 +64,7 @@ const FILTER_OPTIONS = [
   "Rejected",
 ] as const;
 
-const PAGE_SIZE = 7;
+const PAGE_SIZE = 8;
 
 function QualityBar({ score }: { score: number }) {
   const color = score >= 85 ? "#16A34A" : score >= 70 ? "#F59E0B" : "#EF4444";
@@ -57,10 +83,250 @@ function QualityBar({ score }: { score: number }) {
   );
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Main Table Component Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+function ShelfLifeBar({ percent }: { percent: number }) {
+  const color =
+    percent >= 60 ? "#16A34A" : percent >= 30 ? "#F59E0B" : "#EF4444";
+  return (
+    <div className={styles.shelfCell}>
+      <div className={styles.shelfMini}>
+        <div
+          className={styles.shelfMiniFill}
+          style={{ width: `${percent}%`, background: color }}
+        />
+      </div>
+      <span style={{ color, fontSize: 12, fontWeight: 600 }}>{percent}%</span>
+    </div>
+  );
+}
+
+/* ── Batch Detail Drawer ────────────────────────────────── */
+function BatchDetailDrawer({
+  batch,
+  onClose,
+  onShelve,
+  onMarkSold,
+}: {
+  batch: RetailerBatch;
+  onClose: () => void;
+  onShelve: (b: RetailerBatch) => void;
+  onMarkSold: (b: RetailerBatch) => void;
+}) {
+  const cfg = STATUS_CONFIG[batch.status];
+  const shelfColor =
+    batch.shelfLifePercent >= 60
+      ? "#16A34A"
+      : batch.shelfLifePercent >= 30
+      ? "#F59E0B"
+      : "#EF4444";
+
+  return (
+    <div className={styles.drawerOverlay} onClick={onClose}>
+      <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
+        {/* Drawer Header */}
+        <div className={styles.drawerHeader}>
+          <div>
+            <p className={styles.drawerBatchId}>
+              #{batch.id.substring(0, 12)}…
+            </p>
+            <h3 className={styles.drawerTitle}>
+              {batch.cropType}
+              {batch.variety ? ` · ${batch.variety}` : ""}
+              {batch.organic && (
+                <span className={styles.organicBadge}>🌿 Organic</span>
+              )}
+            </h3>
+          </div>
+          <button className={styles.drawerClose} onClick={onClose}>
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.drawerBody}>
+          {/* Status */}
+          <div className={styles.drawerSection}>
+            <p className={styles.drawerSectionLabel}>Current Status</p>
+            <span
+              className={styles.statusBadgeLg}
+              style={{
+                background: cfg.bg,
+                color: cfg.color,
+                borderColor: `${cfg.dot}40`,
+              }}
+            >
+              <span
+                className={styles.statusDot}
+                style={{ background: cfg.dot }}
+              />
+              {cfg.label}
+            </span>
+          </div>
+
+          {/* Key Metrics */}
+          <div className={styles.drawerGrid}>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Quantity</span>
+              <span className={styles.drawerValue}>{batch.quantity}</span>
+            </div>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Remaining</span>
+              <span className={styles.drawerValue}>{batch.remainingQty}</span>
+            </div>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Quality Score</span>
+              <span
+                className={styles.drawerValue}
+                style={{
+                  color:
+                    batch.qualityScore >= 85
+                      ? "#16A34A"
+                      : batch.qualityScore >= 70
+                      ? "#F59E0B"
+                      : "#EF4444",
+                }}
+              >
+                {batch.qualityScore}/100{" "}
+                {batch.qualityGrade ? `· ${batch.qualityGrade}` : ""}
+              </span>
+            </div>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Shelf Life</span>
+              <span
+                className={styles.drawerValue}
+                style={{ color: shelfColor }}
+              >
+                {batch.shelfLifeDays}d · {batch.shelfLifePercent}% left
+              </span>
+            </div>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Source</span>
+              <span className={styles.drawerValue}>{batch.sourceName}</span>
+            </div>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Source Type</span>
+              <span className={styles.drawerValue}>{batch.sourceType}</span>
+            </div>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Received</span>
+              <span className={styles.drawerValue}>
+                {batch.receivedAt
+                  ? new Date(batch.receivedAt).toLocaleDateString("en-IN")
+                  : "—"}
+              </span>
+            </div>
+            <div className={styles.drawerItem}>
+              <span className={styles.drawerLabel}>Location</span>
+              <span className={styles.drawerValue}>
+                {batch.sourceLocation || "—"}
+              </span>
+            </div>
+          </div>
+
+          {/* Shelf Life Bar */}
+          <div className={styles.drawerSection}>
+            <p className={styles.drawerSectionLabel}>Shelf Life Remaining</p>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginTop: 6,
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  height: 10,
+                  background: "#e5e7eb",
+                  borderRadius: 99,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${batch.shelfLifePercent}%`,
+                    background: shelfColor,
+                    borderRadius: 99,
+                    transition: "width 0.5s",
+                  }}
+                />
+              </div>
+              <span
+                style={{ color: shelfColor, fontWeight: 700, fontSize: 14 }}
+              >
+                {batch.shelfLifePercent}%
+              </span>
+            </div>
+            {batch.expiresAt && (
+              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                Expires: {batch.expiresAt}
+              </p>
+            )}
+          </div>
+
+          {/* Inspection Note */}
+          {batch.inspectionNote && (
+            <div className={styles.drawerSection}>
+              <p className={styles.drawerSectionLabel}>Inspection Note</p>
+              <div className={styles.noteBox}>{batch.inspectionNote}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className={styles.drawerActions}>
+          {batch.status === "Accepted" && (
+            <button
+              className={`${styles.drawerBtn} ${styles.drawerBtnTeal}`}
+              onClick={() => {
+                onShelve(batch);
+                onClose();
+              }}
+            >
+              🛒 Move to Shelf
+            </button>
+          )}
+          {(batch.status === "Available" || batch.status === "Low Stock") && (
+            <button
+              className={`${styles.drawerBtn} ${styles.drawerBtnPurple}`}
+              onClick={() => {
+                onMarkSold(batch);
+                onClose();
+              }}
+            >
+              ✓ Mark as Sold
+            </button>
+          )}
+          <button
+            className={`${styles.drawerBtn} ${styles.drawerBtnGrey}`}
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Table ─────────────────────────────────────────── */
 export default function InventoryTable({
   batches,
-  onStatusChange,
+  onShelve,
+  onMarkSold,
 }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -81,14 +347,23 @@ export default function InventoryTable({
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const newBatchesCount = batches.filter((b) => b.status === "Accepted").length;
+
   return (
     <>
       <div className={styles.section}>
         {/* Header */}
         <div className={styles.header}>
           <div>
-            <h3 className={styles.title}>Store Inventory</h3>
-            <span className={styles.count}>{filtered.length} batches</span>
+            <h3 className={styles.title}>
+              Store Inventory
+              {newBatchesCount > 0 && (
+                <span className={styles.newBadge}>{newBatchesCount} new</span>
+              )}
+            </h3>
+            <span className={styles.count}>
+              {filtered.length} of {batches.length} batches
+            </span>
           </div>
           <div className={styles.controls}>
             <div className={styles.searchWrap}>
@@ -140,12 +415,12 @@ export default function InventoryTable({
             <thead>
               <tr>
                 <th>Batch ID</th>
-                <th>Crop</th>
-                <th>Qty / Remaining</th>
+                <th>Crop / Variety</th>
+                <th>Quantity</th>
                 <th>Quality</th>
                 <th>Source</th>
                 <th>Shelf Life</th>
-                <th>Section</th>
+                <th>Received</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -154,26 +429,26 @@ export default function InventoryTable({
               {paginated.length === 0 ? (
                 <tr>
                   <td colSpan={9} className={styles.empty}>
-                    No batches match your search or filter.
+                    {search || filter !== "All"
+                      ? "No batches match your search or filter."
+                      : "No inventory batches yet. They will appear here when a distributor or farmer transfers to you."}
                   </td>
                 </tr>
               ) : (
                 paginated.map((batch) => {
                   const cfg = STATUS_CONFIG[batch.status];
-                  const shelfColor =
-                    batch.shelfLifePercent >= 60
-                      ? "#16A34A"
-                      : batch.shelfLifePercent >= 30
-                      ? "#F59E0B"
-                      : "#EF4444";
                   return (
                     <tr
                       key={batch.id}
-                      className={styles.row}
+                      className={`${styles.row} ${
+                        batch.status === "Accepted" ? styles.rowNew : ""
+                      }`}
                       onClick={() => navigate(`/batch/${batch.id}`)}
                       style={{ cursor: "pointer" }}
                     >
-                      <td className={styles.batchId}>{batch.id}</td>
+                      <td className={styles.batchId}>
+                        #{batch.id.substring(0, 8)}
+                      </td>
                       <td>
                         <div className={styles.cropName}>{batch.cropType}</div>
                         {batch.variety && (
@@ -182,7 +457,7 @@ export default function InventoryTable({
                           </div>
                         )}
                         {batch.organic && (
-                          <span className={styles.organicChip}>Ã°Å¸Å’Â¿</span>
+                          <span className={styles.organicChip}>🌿 Organic</span>
                         )}
                       </td>
                       <td>
@@ -199,33 +474,19 @@ export default function InventoryTable({
                           {batch.sourceName}
                         </div>
                         <div className={styles.farmLocation}>
-                          {batch.sourceType} Ã‚Â· {batch.sourceLocation}
+                          {batch.sourceType} · {batch.sourceLocation}
                         </div>
                       </td>
                       <td>
-                        <div className={styles.shelfCell}>
-                          <div className={styles.shelfMini}>
-                            <div
-                              className={styles.shelfMiniFill}
-                              style={{
-                                width: `${batch.shelfLifePercent}%`,
-                                background: shelfColor,
-                              }}
-                            />
-                          </div>
-                          <span
-                            style={{
-                              color: shelfColor,
-                              fontSize: 12,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {batch.shelfLifePercent}%
-                          </span>
-                        </div>
+                        <ShelfLifeBar percent={batch.shelfLifePercent} />
                       </td>
-                      <td className={styles.section}>
-                        {batch.section ?? "Ã¢â‚¬â€"}
+                      <td className={styles.receivedDate}>
+                        {batch.receivedAt
+                          ? new Date(batch.receivedAt).toLocaleDateString(
+                              "en-IN",
+                              { day: "2-digit", month: "short" }
+                            )
+                          : "—"}
                       </td>
                       <td>
                         <span
@@ -236,22 +497,23 @@ export default function InventoryTable({
                             className={styles.statusDot}
                             style={{ background: cfg.dot }}
                           />
-                          {batch.status}
+                          {cfg.label}
                         </span>
                       </td>
                       <td>
-                        <div className={styles.actions}>
+                        <div
+                          className={styles.actions}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* View Details */}
                           <button
                             className={`${styles.actionBtn} ${styles.viewBtn}`}
                             title="View Details"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setViewBatch(batch);
-                            }}
+                            onClick={() => setViewBatch(batch)}
                           >
                             <svg
-                              width="26"
-                              height="26"
+                              width="14"
+                              height="14"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -269,37 +531,40 @@ export default function InventoryTable({
                               />
                             </svg>
                           </button>
+
+                          {/* Shelve (Accepted → Available) */}
                           {batch.status === "Accepted" && (
                             <button
                               className={`${styles.actionBtn} ${styles.availBtn}`}
-                              title="Mark Available"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onStatusChange(batch, "Available");
-                              }}
+                              title="Move to Shelf"
+                              onClick={() => onShelve(batch)}
                             >
-                              Ã°Å¸â€ºâ€™ Shelve
+                              🛒 Shelve
                             </button>
                           )}
+
+                          {/* Mark Sold (Available / Low Stock → Sold) */}
                           {(batch.status === "Available" ||
                             batch.status === "Low Stock") && (
                             <button
                               className={`${styles.actionBtn} ${styles.soldBtn}`}
-                              title="Mark Sold Out"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onStatusChange(batch, "Sold Out");
-                              }}
+                              title="Mark as Sold"
+                              onClick={() => onMarkSold(batch)}
                             >
-                              Ã¢Å“â€œ Sold
+                              ✓ Sold
                             </button>
                           )}
+
+                          {/* Terminal states */}
                           {(batch.status === "Rejected" ||
-                            batch.status === "Expired") && (
+                            batch.status === "Expired" ||
+                            batch.status === "Sold Out") && (
                             <span className={styles.completedTag}>
                               {batch.status === "Rejected"
-                                ? "Ã¢Å“â€¢ Rejected"
-                                : "Ã¢ÂÂ° Expired"}
+                                ? "✕ Rejected"
+                                : batch.status === "Expired"
+                                ? "⏰ Expired"
+                                : "✓ Completed"}
                             </span>
                           )}
                         </div>
@@ -320,7 +585,7 @@ export default function InventoryTable({
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Ã¢â€ Â Prev
+              ← Prev
             </button>
             <span className={styles.pageInfo}>
               Page {page} of {totalPages}
@@ -330,49 +595,21 @@ export default function InventoryTable({
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next Ã¢â€ â€™
+              Next →
             </button>
           </div>
         )}
       </div>
 
-      {viewBatch && (() => {
-        const activeBatch = viewBatch;
-        const detail: BatchDetail = {
-          id: activeBatch.id,
-          cropType: activeBatch.cropType,
-          variety: activeBatch.variety,
-          quantity: activeBatch.quantity,
-          qualityScore: activeBatch.qualityScore,
-          qualityGrade: activeBatch.qualityGrade,
-          shelfLifeDays: activeBatch.shelfLifeDays,
-          shelfLifePercent: activeBatch.shelfLifePercent,
-          organic: activeBatch.organic ?? false,
-          sourceName: activeBatch.sourceName,
-          sourceId: activeBatch.sourceId,
-          sourceType: activeBatch.sourceType,
-          sourceLocation: activeBatch.sourceLocation,
-          pricePerKg: activeBatch.pricePerKg,
-          sellingPrice: activeBatch.sellingPricePerKg,
-          status: activeBatch.status,
-          receivedAt: activeBatch.receivedAt,
-          remainingQty: activeBatch.remainingQty,
-          expiresAt: activeBatch.expiresAt,
-          section: activeBatch.section,
-          inspectionNote: activeBatch.inspectionNote,
-        };
-        return (
-          <BatchDetailsModal
-            batch={detail}
-            role="retailer"
-            accentColor="#16A34A"
-            onClose={() => setViewBatch(null)}
-            onStatusChange={(newStatus) =>
-              onStatusChange(activeBatch, newStatus as RetailerBatchStatus)
-            }
-          />
-        );
-      })()}
+      {/* Batch Detail Drawer */}
+      {viewBatch && (
+        <BatchDetailDrawer
+          batch={viewBatch}
+          onClose={() => setViewBatch(null)}
+          onShelve={onShelve}
+          onMarkSold={onMarkSold}
+        />
+      )}
     </>
   );
 }

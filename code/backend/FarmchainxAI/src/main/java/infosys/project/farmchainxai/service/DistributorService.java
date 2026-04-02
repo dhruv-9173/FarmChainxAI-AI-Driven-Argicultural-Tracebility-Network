@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +31,9 @@ public class DistributorService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+        @Autowired
+        private DistributorProfileRepository distributorProfileRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -47,6 +51,8 @@ public class DistributorService {
             throw new RuntimeException("User is not a distributor");
         }
 
+        DistributorProfile profile = getOrCreateDistributorProfile(user);
+
         return DistributorProfileDto.builder()
                 .fullName(user.getFullName())
                 .email(user.getEmail())
@@ -56,15 +62,16 @@ public class DistributorService {
                 .memberSince(user.getCreatedAt() != null
                         ? user.getCreatedAt().format(dateFormatter)
                         : "")
-                .avatarUrl("/api/avatars/default.png")
-                .companyName("FarmChain Distribution")
-                .companyId("COM-" + user.getId())
-                .warehouseLocation("Pune, Maharashtra")
-                .gstNumber("27AAPPL3100A2ZN")
-                .licenseNumber("LIC-2024-" + user.getId())
-                .operationalArea("Entire Maharashtra")
-                .warehouseCapacity("100,000 kg")
-                .establishedYear("2020")
+                .avatarUrl(profile.getProfileImageUrl() != null ? profile.getProfileImageUrl() : "/api/avatars/default.png")
+                .companyName(profile.getCompanyName())
+                .companyId(profile.getCompanyId())
+                .warehouseLocation(profile.getWarehouseLocation())
+                .gstNumber(profile.getGstNumber())
+                .licenseNumber(profile.getLicenseNumber())
+                .operationalArea(profile.getOperationalArea())
+                .warehouseCapacity(profile.getWarehouseCapacity())
+                .establishedYear(profile.getEstablishedYear())
+                .rating(profile.getRating())
                 .build();
     }
 
@@ -80,6 +87,8 @@ public class DistributorService {
             throw new RuntimeException("User is not a distributor");
         }
 
+                DistributorProfile profile = getOrCreateDistributorProfile(user);
+
         // Update basic user info
         if (request.getFullName() != null && !request.getFullName().isEmpty()) {
             user.setFullName(request.getFullName());
@@ -88,10 +97,39 @@ public class DistributorService {
             user.setPhone(request.getPhone());
         }
 
+                if (request.getCompanyName() != null) profile.setCompanyName(request.getCompanyName());
+                if (request.getCompanyId() != null) profile.setCompanyId(request.getCompanyId());
+                if (request.getWarehouseLocation() != null) profile.setWarehouseLocation(request.getWarehouseLocation());
+                if (request.getGstNumber() != null) profile.setGstNumber(request.getGstNumber());
+                if (request.getLicenseNumber() != null) profile.setLicenseNumber(request.getLicenseNumber());
+                if (request.getOperationalArea() != null) profile.setOperationalArea(request.getOperationalArea());
+                if (request.getWarehouseCapacity() != null) profile.setWarehouseCapacity(request.getWarehouseCapacity());
+                if (request.getEstablishedYear() != null) profile.setEstablishedYear(request.getEstablishedYear());
+                if (request.getAvatarUrl() != null) profile.setProfileImageUrl(request.getAvatarUrl());
+                if (request.getRating() != null) profile.setRating(request.getRating());
+
         userRepository.save(user);
+                distributorProfileRepository.save(profile);
 
         return getDistributorProfile(email);
     }
+
+        private DistributorProfile getOrCreateDistributorProfile(User user) {
+                return distributorProfileRepository.findByDistributorId(user.getId())
+                                .orElseGet(() -> distributorProfileRepository.save(DistributorProfile.builder()
+                                                .user(user)
+                                                .companyName("FarmChain Distribution")
+                                                .companyId("COM-" + user.getId())
+                                                .warehouseLocation("Pune, Maharashtra")
+                                                .gstNumber("27AAPPL3100A2ZN")
+                                                .licenseNumber("LIC-2024-" + user.getId())
+                                                .operationalArea("Entire Maharashtra")
+                                                .warehouseCapacity("100,000 kg")
+                                                .establishedYear("2020")
+                                                .rating(BigDecimal.ZERO)
+                                                .profileImageUrl("/api/avatars/default.png")
+                                                .build()));
+        }
 
     /**
      * Change password for distributor

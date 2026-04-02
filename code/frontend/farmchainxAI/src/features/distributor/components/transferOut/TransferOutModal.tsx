@@ -71,6 +71,7 @@ export default function TransferOutModal({
   const [batchesLoading, setBatchesLoading] = useState(false);
   const [batchesError, setBatchesError] = useState("");
   const [note, setNote] = useState("");
+  const [transferPrice, setTransferPrice] = useState("");
   const [done, setDone] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [recipients, setRecipients] = useState<TransferRecipientDto[]>([]);
@@ -105,7 +106,7 @@ export default function TransferOutModal({
       setBatchesLoading(true);
       setBatchesError("");
       try {
-        // Distributor can transfer batches that are received or have passed quality check
+        // Distributor can transfer only quality-checked batches
         const batches = await fetchTransferableBatches();
         setAvailableBatches(batches);
       } catch (err: unknown) {
@@ -187,6 +188,11 @@ export default function TransferOutModal({
     setConfirming(true);
 
     try {
+      const normalizedPrice = Number(transferPrice);
+      if (!Number.isFinite(normalizedPrice) || normalizedPrice <= 0) {
+        throw new Error("Enter a valid transfer price greater than 0.");
+      }
+
       const recipientRole = recipientType
         ? toTransferRole(recipientType)
         : null;
@@ -206,6 +212,7 @@ export default function TransferOutModal({
         recipientId: selectedRecipient.id,
         recipientRole,
         note: note.trim() || undefined,
+        transferPrice: normalizedPrice,
       });
 
       onTransferComplete(transfer, selectedRecipient);
@@ -227,6 +234,7 @@ export default function TransferOutModal({
     setSelectedBatch(null);
     setBatchesError("");
     setNote("");
+    setTransferPrice("");
     setDone(false);
     setSearch("");
     setRecipientError("");
@@ -413,6 +421,8 @@ export default function TransferOutModal({
                   recipient={selectedRecipient}
                   note={note}
                   onNoteChange={setNote}
+                  transferPrice={transferPrice}
+                  onTransferPriceChange={setTransferPrice}
                   onConfirm={handleConfirm}
                   confirming={confirming}
                 />
@@ -481,16 +491,35 @@ export default function TransferOutModal({
                   <button
                     className={styles.nextBtn}
                     onClick={handleConfirm}
-                    disabled={confirming}
+                    disabled={
+                      confirming ||
+                      !Number.isFinite(Number(transferPrice)) ||
+                      Number(transferPrice) <= 0
+                    }
                     style={{
                       padding: "8px 16px",
-                      backgroundColor: confirming ? "#E5E7EB" : "#16A34A",
-                      color: confirming ? "#9CA3AF" : "white",
+                      backgroundColor:
+                        confirming ||
+                        !Number.isFinite(Number(transferPrice)) ||
+                        Number(transferPrice) <= 0
+                          ? "#E5E7EB"
+                          : "#16A34A",
+                      color:
+                        confirming ||
+                        !Number.isFinite(Number(transferPrice)) ||
+                        Number(transferPrice) <= 0
+                          ? "#9CA3AF"
+                          : "white",
                       border: "none",
                       borderRadius: "6px",
                       fontSize: "0.875rem",
                       fontWeight: "500",
-                      cursor: confirming ? "not-allowed" : "pointer",
+                      cursor:
+                        confirming ||
+                        !Number.isFinite(Number(transferPrice)) ||
+                        Number(transferPrice) <= 0
+                          ? "not-allowed"
+                          : "pointer",
                       marginLeft: "12px",
                       display: "flex",
                       alignItems: "center",

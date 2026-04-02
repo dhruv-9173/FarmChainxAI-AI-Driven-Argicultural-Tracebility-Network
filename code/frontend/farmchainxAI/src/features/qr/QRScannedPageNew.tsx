@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { memo, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styles from "./QRScannedPage.module.css";
-import { blockchainApi } from "../../api/blockchainApi";
 import type { SupplyChainVerification } from "../../types/blockchain.types";
 
 interface BatchDetail {
@@ -34,7 +33,20 @@ interface BatchDetail {
   createdAt?: string;
 }
 
-function StarRow({
+interface ReviewItem {
+  id: string;
+  user: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+interface ReviewDraft {
+  rating: number;
+  comment: string;
+}
+
+const StarRow = memo(function StarRow({
   value,
   onChange,
 }: {
@@ -61,7 +73,139 @@ function StarRow({
       ))}
     </div>
   );
+});
+
+const REVIEW_GET_ENDPOINTS = [
+  (batchId: string) => `/api/v1/browse/batches/${batchId}/reviews`,
+];
+
+const REVIEW_POST_ENDPOINTS = [
+  (batchId: string) => `/api/v1/browse/batches/${batchId}/reviews`,
+];
+
+const API_BASE_ORIGIN = (
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1"
+).replace(/\/api\/v1\/?$/, "");
+
+async function fetchJson(endpoint: string, init?: RequestInit) {
+  const response = await fetch(`${API_BASE_ORIGIN}${endpoint}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.json();
 }
+
+function mapReview(r: any): ReviewItem {
+  return {
+    id: String(r.id ?? Date.now()),
+    user: String(r.user ?? r.userDisplayName ?? r.reviewerName ?? "Anonymous"),
+    rating: Number(r.rating ?? 0),
+    comment: String(r.comment ?? ""),
+    date: String(r.date ?? r.formattedDate ?? r.createdAt ?? ""),
+  };
+}
+
+function extractReviewArray(payload: any): any[] {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.content)) return payload.content;
+  if (Array.isArray(payload?.reviews)) return payload.reviews;
+  return [];
+}
+
+function getEventPriceValue(event: SupplyChainVerification["events"][number]) {
+  const eventData = event as unknown as Record<string, unknown>;
+
+  const numericPriceFields = [
+    event.unitPrice,
+    eventData.sellingPrice,
+    eventData.pricePerUnit,
+    eventData.purchasePrice,
+    eventData.transferPrice,
+    eventData.price,
+  ];
+
+  for (const value of numericPriceFields) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
+
+const ReviewComposer = memo(function ReviewComposer({
+  onSubmit,
+  isSubmitting,
+  submitError,
+  submitSuccess,
+}: {
+  onSubmit: (payload: ReviewDraft) => Promise<void>;
+  isSubmitting: boolean;
+  submitError: string | null;
+  submitSuccess: boolean;
+}) {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+
+  const canSubmit = !isSubmitting && rating > 0 && comment.trim().length > 0;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+
+    await onSubmit({ rating, comment: comment.trim() });
+    setComment("");
+    setRating(0);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className={styles.reviewForm}>
+      <div className={styles.reviewFormTop}>
+        <p className={styles.reviewHint}>
+          Rate this batch and share your feedback
+        </p>
+        <span className={styles.charCount}>{comment.length}/400</span>
+      </div>
+      <textarea
+        className={styles.reviewTextarea}
+        placeholder="Share your experience with this batch..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value.slice(0, 400))}
+        rows={4}
+      />
+      <div className={styles.reviewFormFooter}>
+        <StarRow value={rating} onChange={setRating} />
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className={styles.reviewSubmitBtn}
+        >
+          {isSubmitting ? "Posting..." : "Post Review"}
+        </button>
+      </div>
+      {submitSuccess && (
+        <div className={styles.reviewSuccess}>Review posted successfully.</div>
+      )}
+      {submitError && <div className={styles.reviewError}>{submitError}</div>}
+    </form>
+  );
+});
 
 function StaticStars({ rating }: { rating: number }) {
   return (
@@ -173,20 +317,39 @@ function LoadingState() {
 }
 
 export default function QRScannedPage() {
-  const { batchId } = useParams<{ batchId: string }>();
+  const { batchId: routeBatchId } = useParams<{ batchId: string }>();
+  const location = useLocation();
+
+  const batchId = useMemo(() => {
+    if (routeBatchId) return routeBatchId;
+
+    const params = new URLSearchParams(location.search);
+    const queryBatchId = params.get("batchId") || params.get("id");
+    if (queryBatchId) return queryBatchId;
+
+    const segments = location.pathname.split("/").filter(Boolean);
+    const batchSegmentIndex = segments.findIndex(
+      (segment) => segment === "batch"
+    );
+    if (batchSegmentIndex >= 0 && segments[batchSegmentIndex + 1]) {
+      return segments[batchSegmentIndex + 1];
+    }
+
+    return undefined;
+  }, [location.pathname, location.search, routeBatchId]);
 
   console.log("🎯 QRScannedPage mounted with batchId:", batchId);
 
   const [batch, setBatch] = useState<BatchDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reviewRating, setReviewRating] = useState(0);
-  const [reviewComment, setReviewComment] = useState("");
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [blockchainVerified, setBlockchainVerified] = useState(false);
   const [imgError, setImgError] = useState(false);
-  const [, setReviewsLoading] = useState(false);
   const [supplyChain, setSupplyChain] =
     useState<SupplyChainVerification | null>(null);
 
@@ -204,15 +367,7 @@ export default function QRScannedPage() {
       try {
         setLoading(true);
         console.log("🔍 Fetching batch details for:", batchId);
-        const res = await fetch(
-          `http://localhost:8080/api/v1/browse/batches/${batchId}`
-        );
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await fetchJson(`/api/v1/browse/batches/${batchId}`);
         console.log("✅ Batch response:", data);
 
         if (data.success && data.data) {
@@ -247,21 +402,34 @@ export default function QRScannedPage() {
     const fetchReviews = async () => {
       try {
         setReviewsLoading(true);
-        const res = await fetch(
-          `http://localhost:8080/api/v1/browse/batches/${batchId}/reviews`
-        );
+        let loaded = false;
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+        for (const endpointBuilder of REVIEW_GET_ENDPOINTS) {
+          try {
+            const endpoint = endpointBuilder(batchId);
+            const data = await fetchJson(endpoint);
+            const reviewArray = extractReviewArray(data);
+
+            if (
+              reviewArray.length > 0 ||
+              data?.success ||
+              Array.isArray(data)
+            ) {
+              setReviews(reviewArray.map((review: any) => mapReview(review)));
+              loaded = true;
+              break;
+            }
+          } catch {
+            // Try next endpoint variant.
+          }
         }
 
-        const data = await res.json();
-        if (data.success && data.data) {
-          setReviews(data.data);
+        if (!loaded) {
+          setReviews([]);
         }
       } catch (err: any) {
         console.error("Failed to load reviews:", err.message);
-        // Don't show error for reviews - they're optional
+        setReviews([]);
       } finally {
         setReviewsLoading(false);
       }
@@ -277,7 +445,9 @@ export default function QRScannedPage() {
     const fetchSupplyChain = async () => {
       try {
         console.log("🔗 Fetching supply chain for batch:", batchId);
-        const data = await blockchainApi.getVerifiedSupplyChain(batchId);
+        const data = await fetchJson(
+          `/api/v1/supply-chain/batch/${batchId}/verified`
+        );
         console.log("✅ Supply chain loaded:", data);
         setSupplyChain(data);
       } catch (err: any) {
@@ -304,40 +474,55 @@ export default function QRScannedPage() {
       )
     : 0;
 
-  const handleReviewSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (reviewRating === 0 || !reviewComment.trim()) return;
+  const handleReviewSubmit = async ({ rating, comment }: ReviewDraft) => {
+    setReviewError(null);
+    setReviewSubmitting(true);
+    setReviewSubmitted(false);
 
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/v1/browse/batches/${batchId}/reviews`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            rating: reviewRating,
-            comment: reviewComment.trim(),
-          }),
+      let postedReview: ReviewItem | null = null;
+
+      for (const endpointBuilder of REVIEW_POST_ENDPOINTS) {
+        try {
+          const endpoint = endpointBuilder(batchId!);
+          const data = await fetchJson(endpoint, {
+            method: "POST",
+            body: JSON.stringify({ rating, comment }),
+          });
+
+          const posted = data?.data ?? data;
+          if (
+            posted &&
+            (data?.success !== false || posted?.id || posted?.comment)
+          ) {
+            postedReview = {
+              id: String(posted.id ?? Date.now()),
+              user: String(
+                posted.user ?? posted.userDisplayName ?? "Anonymous"
+              ),
+              rating: Number(posted.rating ?? rating),
+              comment: String(posted.comment ?? comment),
+              date: String(posted.date ?? posted.formattedDate ?? "Just now"),
+            };
+            break;
+          }
+        } catch {
+          // Try next endpoint variant.
         }
-      );
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
       }
 
-      const data = await res.json();
-      if (data.success && data.data) {
-        // Add the new review to the list
-        setReviews((prev) => [data.data, ...prev]);
-        setTimeout(() => {
-          setReviewSubmitted(false);
-        }, 2000);
+      if (!postedReview) {
+        throw new Error("No compatible review endpoint accepted this request.");
       }
+
+      setReviews((prev) => [postedReview as ReviewItem, ...prev]);
+      setReviewSubmitted(true);
+      window.setTimeout(() => setReviewSubmitted(false), 2000);
     } catch (err: any) {
       console.error("Failed to submit review:", err.message);
-      // Show error to user if needed
+      setReviewError("Failed to submit feedback. Please try again.");
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -696,6 +881,24 @@ export default function QRScannedPage() {
                       </div>
                     )}
 
+                    {(event.stage === "RECEIVED" ||
+                      event.stage === "STORED") && (
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "black",
+                          marginTop: "0.25rem",
+                        }}
+                      >
+                        {(() => {
+                          const eventPrice = getEventPriceValue(event);
+                          return eventPrice !== null
+                            ? `₹ Price: ${eventPrice} / unit`
+                            : "₹ Price: Not recorded";
+                        })()}
+                      </div>
+                    )}
+
                     {event.eventHash && (
                       <div
                         style={{
@@ -886,37 +1089,27 @@ export default function QRScannedPage() {
 
             {/* Reviews */}
             <section className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                <span className={styles.cardTitleIcon}>★</span> Consumer Reviews
-              </h2>
+              <div className={styles.reviewSectionHeader}>
+                <h2 className={styles.cardTitle}>
+                  <span className={styles.cardTitleIcon}>★</span> Consumer
+                  Reviews
+                </h2>
+                <span className={styles.reviewCount}>
+                  {reviews.length} reviews
+                </span>
+              </div>
 
-              <form onSubmit={handleReviewSubmit} className={styles.reviewForm}>
-                <textarea
-                  className={styles.reviewTextarea}
-                  placeholder="Share your experience with this batch…"
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  rows={3}
-                />
-                <div className={styles.reviewFormFooter}>
-                  <StarRow value={reviewRating} onChange={setReviewRating} />
-                  <button
-                    type="submit"
-                    disabled={!reviewComment.trim() || reviewRating === 0}
-                    className={styles.reviewSubmitBtn}
-                  >
-                    Post Review
-                  </button>
-                </div>
-                {reviewSubmitted && (
-                  <div className={styles.reviewSuccess}>
-                    ✓ Review posted successfully
-                  </div>
-                )}
-              </form>
+              <ReviewComposer
+                onSubmit={handleReviewSubmit}
+                isSubmitting={reviewSubmitting}
+                submitError={reviewError}
+                submitSuccess={reviewSubmitted}
+              />
 
               <div className={styles.reviewsList}>
-                {reviews.length === 0 ? (
+                {reviewsLoading ? (
+                  <p className={styles.noReviews}>Loading reviews...</p>
+                ) : reviews.length === 0 ? (
                   <p className={styles.noReviews}>
                     No reviews yet — be the first.
                   </p>
@@ -925,7 +1118,7 @@ export default function QRScannedPage() {
                     <div key={review.id} className={styles.reviewItem}>
                       <div className={styles.reviewItemTop}>
                         <div className={styles.reviewAvatar}>
-                          {review.user[0]}
+                          {(review.user || "A")[0]}
                         </div>
                         <div className={styles.reviewMeta}>
                           <span className={styles.reviewUser}>

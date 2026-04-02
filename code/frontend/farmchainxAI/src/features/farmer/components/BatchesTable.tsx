@@ -6,6 +6,8 @@ interface BatchesTableProps {
   batches: Batch[];
   onViewBatch: (batch: Batch) => void;
   onTransferBatch?: (batch: Batch) => void;
+  onMarkHarvested?: (batch: Batch) => Promise<void>;
+  onViewReceipt?: (batch: Batch) => void | Promise<void>;
 }
 
 const STATUS_CONFIG: Record<
@@ -14,6 +16,17 @@ const STATUS_CONFIG: Record<
 > = {
   PENDING: { dot: "#F59E0B", bg: "#FFFBEB", color: "#92400E" },
   ACTIVE: { dot: "#16A34A", bg: "#F0FDF4", color: "#166534" },
+  CREATED: { dot: "#D97706", bg: "#FFF7ED", color: "#9A3412" },
+  HARVESTED: { dot: "#16A34A", bg: "#ECFDF5", color: "#065F46" },
+  RECEIVED_BY_DIST: { dot: "#0284C7", bg: "#ECFEFF", color: "#0C4A6E" },
+  QUALITY_PASSED: { dot: "#0EA5E9", bg: "#E0F2FE", color: "#075985" },
+  RECEIVED_BY_RETAIL: { dot: "#2563EB", bg: "#EFF6FF", color: "#1E3A8A" },
+  AVAILABLE: { dot: "#7C3AED", bg: "#F5F3FF", color: "#5B21B6" },
+  DELIVERED: { dot: "#4F46E5", bg: "#EEF2FF", color: "#3730A3" },
+  CONSUMED: { dot: "#374151", bg: "#F3F4F6", color: "#111827" },
+  REJECTED_BY_FARMER: { dot: "#DC2626", bg: "#FEF2F2", color: "#991B1B" },
+  REJECTED_BY_DIST: { dot: "#DC2626", bg: "#FEF2F2", color: "#991B1B" },
+  REJECTED_BY_RETAIL: { dot: "#DC2626", bg: "#FEF2F2", color: "#991B1B" },
   TRANSFERRED: { dot: "#2563EB", bg: "#EFF6FF", color: "#1E40AF" },
   RECEIVED: { dot: "#0EA5E9", bg: "#ECFEFF", color: "#0C4A6E" },
   SOLD: { dot: "#7C3AED", bg: "#F5F3FF", color: "#5B21B6" },
@@ -27,6 +40,12 @@ const STATUS_CONFIG: Record<
 
 const FILTER_OPTIONS: ("All" | BatchStatus)[] = [
   "All",
+  "CREATED",
+  "HARVESTED",
+  "RECEIVED_BY_DIST",
+  "QUALITY_PASSED",
+  "RECEIVED_BY_RETAIL",
+  "AVAILABLE",
   "PENDING",
   "ACTIVE",
   "TRANSFERRED",
@@ -42,6 +61,8 @@ export default function BatchesTable({
   batches,
   onViewBatch,
   onTransferBatch,
+  onMarkHarvested,
+  onViewReceipt,
 }: BatchesTableProps) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | BatchStatus>("All");
@@ -202,7 +223,31 @@ export default function BatchesTable({
                             />
                           </svg>
                         </button>
-                        {(b.status === "ACTIVE" || b.status === "Active") && (
+                        {b.status === "CREATED" && (
+                          <button
+                            className={styles.actionBtn}
+                            title="Mark as Harvested"
+                            onClick={() => onMarkHarvested?.(b)}
+                          >
+                            <svg
+                              width="28"
+                              height="28"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                        {(b.status === "HARVESTED" ||
+                          b.status === "ACTIVE" ||
+                          b.status === "Active") && (
                           <button
                             className={styles.actionBtn}
                             title="Transfer"
@@ -224,7 +269,11 @@ export default function BatchesTable({
                             </svg>
                           </button>
                         )}
-                        <button className={styles.actionBtn} title="Track">
+                        <button
+                          className={styles.actionBtn}
+                          title="View Receipt"
+                          onClick={() => onViewReceipt?.(b)}
+                        >
                           <svg
                             width="28"
                             height="28"

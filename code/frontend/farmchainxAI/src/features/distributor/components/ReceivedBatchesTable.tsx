@@ -10,6 +10,7 @@ import styles from "./ReceivedBatchesTable.module.css";
 
 interface Props {
   batches: DistributorBatch[];
+  onViewReceipt?: (batch: DistributorBatch) => void;
 }
 
 const STATUS_CONFIG: Record<
@@ -31,7 +32,7 @@ const FILTER_OPTIONS = [
   "RECEIVED_BY_DIST",
   "QUALITY_PASSED",
   "REJECTED_BY_DIST",
-  "RECEIVED_BY_RETAIL"
+  "RECEIVED_BY_RETAIL",
 ] as const;
 
 const PAGE_SIZE = 7;
@@ -53,7 +54,10 @@ function QualityBar({ score }: { score: number }) {
   );
 }
 
-export default function ReceivedBatchesTable({ batches }: Props) {
+export default function ReceivedBatchesTable({
+  batches,
+  onViewReceipt,
+}: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | DistributorBatchStatus>("All");
@@ -152,7 +156,11 @@ export default function ReceivedBatchesTable({ batches }: Props) {
                 </tr>
               ) : (
                 paginated.map((batch) => {
-                  const cfg = STATUS_CONFIG[batch.status] || { dot: "#6B7280", bg: "#F3F4F6", color: "#374151" };
+                  const cfg = STATUS_CONFIG[batch.status] || {
+                    dot: "#6B7280",
+                    bg: "#F3F4F6",
+                    color: "#374151",
+                  };
                   return (
                     <tr
                       key={batch.id}
@@ -226,6 +234,21 @@ export default function ReceivedBatchesTable({ batches }: Props) {
                             </svg>
                           </button>
 
+                          {(batch.status === "In Transit" ||
+                            batch.status === "Transferred" ||
+                            batch.status === "RECEIVED_BY_RETAIL") && (
+                            <button
+                              className={`${styles.actionBtn} ${styles.reviewBtn}`}
+                              title="View Transfer Receipt"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onViewReceipt?.(batch);
+                              }}
+                            >
+                              Receipt
+                            </button>
+                          )}
+
                           {batch.status === "In Transit" && (
                             <span className={styles.inTransitTag}>
                               ðŸšš In Transit
@@ -233,12 +256,12 @@ export default function ReceivedBatchesTable({ batches }: Props) {
                           )}
                           {(batch.status === "RECEIVED_BY_RETAIL" ||
                             batch.status === "REJECTED_BY_DIST") && (
-                              <span className={styles.completedTag}>
-                                {batch.status === "REJECTED_BY_DIST"
-                                  ? "âœ— Rejected"
-                                  : "âœ“ Done"}
-                              </span>
-                            )}
+                            <span className={styles.completedTag}>
+                              {batch.status === "REJECTED_BY_DIST"
+                                ? "âœ— Rejected"
+                                : "âœ“ Done"}
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>

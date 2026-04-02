@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap");
+
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
   --green-50: #f0fdf4;
@@ -27,9 +29,6 @@
   --font-body: "DM Sans", "Helvetica Neue", sans-serif;
   --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-/* ── Google Fonts import (display + body) ──────────────── */
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap");
 
 /* ── Page container ────────────────────────────────────── */
 .container {

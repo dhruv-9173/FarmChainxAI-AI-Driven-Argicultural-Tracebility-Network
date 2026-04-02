@@ -31,6 +31,7 @@ export interface SupplyChainEventBlockchain {
   temperatureC?: number;
   humidityPercent?: number;
   qualityScore?: number;
+  unitPrice?: number;
   notes?: string;
   eventType?: string;
   deviceId?: string;

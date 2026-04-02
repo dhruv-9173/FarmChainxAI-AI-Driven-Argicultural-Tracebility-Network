@@ -173,14 +173,30 @@ public class RetailerController {
      * Get sales analytics and revenue metrics
      */
     @GetMapping("/analytics/sales")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getSalesAnalytics(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<RetailerAnalyticsPointDto>>> getSalesAnalytics(Authentication authentication) {
         try {
             String email = authentication.getName();
-            Map<String, Object> analytics = retailerService.getSalesAnalytics(email);
+            List<RetailerAnalyticsPointDto> analytics = retailerService.getSalesAnalytics(email);
             return ResponseEntity.ok(new ApiResponse<>("Sales analytics retrieved successfully", analytics, true));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>("Failed to get analytics: " + e.getMessage(), null, false));
+        }
+    }
+
+    /**
+     * GET /api/v1/retailer/activities
+     * Get recent retailer activities
+     */
+    @GetMapping("/activities")
+    public ResponseEntity<ApiResponse<List<ActivityItemDto>>> getRetailerActivities(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            List<ActivityItemDto> activities = retailerService.getRetailerActivities(email);
+            return ResponseEntity.ok(new ApiResponse<>("Activities retrieved successfully", activities, true));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Failed to get activities: " + e.getMessage(), null, false));
         }
     }
 
@@ -287,10 +303,12 @@ public class RetailerController {
     public ResponseEntity<ApiResponse<BatchDto>> acceptBatch(
             Authentication authentication,
             @PathVariable String batchId,
-            @RequestParam(required = false) String notes) {
+            @RequestBody(required = false) BatchAcceptRequest request) {
         try {
             String email = authentication.getName();
-            BatchDto batch = retailerService.acceptBatch(email, batchId, notes != null ? notes : "");
+            String notes = request != null ? request.getInspectionNote() : "";
+            Double shelfPrice = request != null ? request.getShelfPrice() : null;
+            BatchDto batch = retailerService.acceptBatch(email, batchId, notes != null ? notes : "", shelfPrice);
             return ResponseEntity.ok(new ApiResponse<>("Batch accepted successfully", batch, true));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
