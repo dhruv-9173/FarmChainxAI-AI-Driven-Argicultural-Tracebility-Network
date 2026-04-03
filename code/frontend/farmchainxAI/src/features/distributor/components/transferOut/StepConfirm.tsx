@@ -1,6 +1,4 @@
-import type {
-  DistributorBatch,
-} from "../../types/distributor.types";
+import type { DistributorBatch } from "../../types/distributor.types";
 import type { TransferRecipientDto } from "../../../transfer/api/transferApi";
 import styles from "./TransferOutModal.module.css";
 
@@ -9,6 +7,8 @@ interface Props {
   recipient: TransferRecipientDto;
   note: string;
   onNoteChange: (v: string) => void;
+  transferPrice: string;
+  onTransferPriceChange: (v: string) => void;
   onConfirm: () => void;
   confirming: boolean;
 }
@@ -18,6 +18,8 @@ export default function StepConfirm({
   recipient,
   note,
   onNoteChange,
+  transferPrice,
+  onTransferPriceChange,
   onConfirm,
   confirming,
 }: Props) {
@@ -88,6 +90,21 @@ export default function StepConfirm({
         </div>
       </div>
 
+      <div className={styles.noteSection}>
+        <label className={styles.noteLabel}>
+          Transfer Price (INR per unit)
+        </label>
+        <input
+          className={styles.noteInput}
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Enter transfer price"
+          value={transferPrice}
+          onChange={(e) => onTransferPriceChange(e.target.value)}
+        />
+      </div>
+
       {/* Transfer note */}
       <div className={styles.noteSection}>
         <label className={styles.noteLabel}>
@@ -136,4 +153,3 @@ export default function StepConfirm({
     </div>
   );
 }
-

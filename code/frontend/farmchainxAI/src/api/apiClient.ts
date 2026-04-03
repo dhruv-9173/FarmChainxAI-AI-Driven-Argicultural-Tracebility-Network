@@ -58,8 +58,14 @@ export function clearTokens(): void {
 }
 
 // ── Axios instance ────────────────────────────────────────────────────────────
-// Base URL from env or fallback
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+// In production, require an explicit base URL to avoid accidental localhost calls.
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "http://localhost:8080/api/v1" : "");
+
+if (!BASE_URL) {
+  throw new Error("VITE_API_BASE_URL is required in production");
+}
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

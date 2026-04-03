@@ -83,9 +83,15 @@ const REVIEW_POST_ENDPOINTS = [
   (batchId: string) => `/api/v1/browse/batches/${batchId}/reviews`,
 ];
 
-const API_BASE_ORIGIN = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1"
-).replace(/\/api\/v1\/?$/, "");
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "http://localhost:8080/api/v1" : "");
+
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_BASE_URL is required in production");
+}
+
+const API_BASE_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 
 async function fetchJson(endpoint: string, init?: RequestInit) {
   const response = await fetch(`${API_BASE_ORIGIN}${endpoint}`, {

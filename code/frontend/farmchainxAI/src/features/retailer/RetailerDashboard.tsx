@@ -2,8 +2,10 @@ import { useState, useCallback, useEffect } from "react";
 import type {
   RetailerBatch,
   RetailerActivityItem,
+  RetailerNotification,
 } from "./types/retailer.types";
 import { useAuth } from "../../hooks/useAuth";
+import { useNotifications } from "../../hooks/useNotifications";
 import {
   getRetailerBatches,
   getRetailerProfile,
@@ -17,15 +19,21 @@ import RetailerKPICards from "./components/RetailerKPICards";
 import RetailerQuickActions from "./components/RetailerQuickActions";
 import InventoryTable from "./components/InventoryTable";
 import RetailerShelfPanel from "./components/RetailerShelfPanel";
+import RetailerNotifications from "./components/RetailerNotifications";
 import MarkSoldModal from "./components/MarkSoldModal";
 import styles from "./RetailerDashboard.module.css";
 
 export default function RetailerDashboard() {
   const { user } = useAuth();
+  const { fetchUnreadNotifications, markAsRead, markAllAsRead } =
+    useNotifications();
 
   /* State */
   const [batches, setBatches] = useState<RetailerBatch[]>([]);
   const [activities, setActivities] = useState<RetailerActivityItem[]>([]);
+  const [notifications, setNotifications] = useState<RetailerNotification[]>(
+    []
+  );
   const [storeName, setStoreName] = useState<string>("Store");
 
   // Modals
@@ -57,7 +65,19 @@ export default function RetailerDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+
+    // Fetch notifications using centralized API
+    fetchUnreadNotifications()
+      .then((data) =>
+        setNotifications(
+          Array.isArray(data) ? (data as RetailerNotification[]) : []
+        )
+      )
+      .catch((error) => {
+        console.error("Failed to fetch notifications:", error);
+        setNotifications([]);
+      });
+  }, [fetchData, fetchUnreadNotifications]);
 
   const handleShelveAction = async (batch: RetailerBatch) => {
     try {
@@ -90,6 +110,33 @@ export default function RetailerDashboard() {
     setSoldModalBatch(null);
     fetchData(); // Refresh table and activities
   };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleMarkRead = useCallback(
+    async (id: string) => {
+      try {
+        await markAsRead(id);
+        // Update local state optimistically
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        );
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+      }
+    },
+    [markAsRead]
+  );
+
+  const handleMarkAllRead = useCallback(async () => {
+    try {
+      await markAllAsRead();
+      // Update local state optimistically
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
+  }, [markAllAsRead]);
 
   const inStockBatches = batches.filter(
     (b) => b.status === "Available" || b.status === "Low Stock"
@@ -126,6 +173,12 @@ export default function RetailerDashboard() {
           </div>
           <div className={styles.rightCol}>
             <RetailerShelfPanel batches={batches} activities={activities} />
+            <RetailerNotifications
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkRead={handleMarkRead}
+              onMarkAllRead={handleMarkAllRead}
+            />
           </div>
         </div>
       </div>
