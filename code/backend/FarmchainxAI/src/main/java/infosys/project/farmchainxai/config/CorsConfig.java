@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${app.cors.allowed-origin-patterns:https://farm-chainx-ai-ai-driven-argicultur-rho.vercel.app}")
+    @Value("${app.cors.allowed-origin-patterns:https://farm-chainx-ai-ai-driven-argicultural-tracebility-g0lx83erz.vercel.app/*}")
     private String allowedOriginPatterns;
 
     @Bean
