@@ -179,6 +179,13 @@ export const SupplyChainTimeline: React.FC<SupplyChainTimelineProps> = ({
                     </div>
                   )}
 
+                {event.unitPrice !== undefined && event.unitPrice !== null && (
+                  <div className={styles.detail}>
+                    <strong>₹ Unit Price</strong> ₹
+                    {Number(event.unitPrice).toLocaleString("en-IN")}
+                  </div>
+                )}
+
                 {event.temperatureC !== undefined &&
                   event.temperatureC !== null && (
                     <div className={styles.detail}>

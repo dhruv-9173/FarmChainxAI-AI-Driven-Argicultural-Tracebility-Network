@@ -145,6 +145,16 @@ export const PublicBatchTracker: React.FC<PublicBatchTrackerProps> = ({
                           ⭐ Quality: <strong>{stop.qualityScore}/100</strong>
                         </p>
                       )}
+                      {stop.unitPrice !== undefined &&
+                        stop.unitPrice !== null &&
+                        Number.isFinite(Number(stop.unitPrice)) && (
+                          <p className={styles.quality}>
+                            ₹ Unit Price:{" "}
+                            <strong>
+                              ₹{Number(stop.unitPrice).toLocaleString("en-IN")}
+                            </strong>
+                          </p>
+                        )}
                     </div>
                   </div>
                   {index < trackingData.journey.length - 1 && (

@@ -89,5 +89,6 @@ export interface PublicTrackingData {
     location: string;
     actorRole: string;
     qualityScore: number;
+    unitPrice?: number;
   }[];
 }

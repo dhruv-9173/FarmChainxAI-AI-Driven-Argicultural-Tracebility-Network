@@ -35,6 +35,7 @@ export interface TransferReceiptDto {
   cropType: string;
   quantity: number;
   quantityUnit?: string;
+  transferPrice?: number;
   transferNote?: string;
   createdAt?: string;
   updatedAt?: string;

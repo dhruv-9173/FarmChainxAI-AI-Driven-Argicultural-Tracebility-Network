@@ -178,6 +178,7 @@ public class BatchTransferService {
         receipt.put("cropType", batch.getCropType());
         receipt.put("quantity", batch.getQuantity());
         receipt.put("quantityUnit", batch.getQuantityUnit() != null ? batch.getQuantityUnit().name() : null);
+        receipt.put("transferPrice", batch.getPricePerUnit());
         receipt.put("transferNote", transfer.getInspectionNote());
         receipt.put("createdAt", transfer.getCreatedAt());
         receipt.put("updatedAt", transfer.getUpdatedAt());

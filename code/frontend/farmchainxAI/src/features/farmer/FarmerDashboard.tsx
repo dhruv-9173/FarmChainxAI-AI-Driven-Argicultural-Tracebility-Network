@@ -340,6 +340,16 @@ export default function FarmerDashboard() {
                 </strong>
               </div>
               <div className={styles.receiptRow}>
+                <span>Transfer Price</span>
+                <strong>
+                  {Number.isFinite(Number(selectedReceipt.transferPrice))
+                    ? `₹${Number(selectedReceipt.transferPrice).toLocaleString(
+                        "en-IN"
+                      )}`
+                    : "-"}
+                </strong>
+              </div>
+              <div className={styles.receiptRow}>
                 <span>Transfer Note</span>
                 <strong>{selectedReceipt.transferNote || "-"}</strong>
               </div>

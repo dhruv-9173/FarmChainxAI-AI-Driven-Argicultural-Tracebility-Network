@@ -459,6 +459,7 @@ public class SupplyChainEventController {
                     if (e.getActorName() != null) map.put("actorName", e.getActorName());
                     if (e.getActorRole() != null) map.put("actorRole", e.getActorRole());
                     if (e.getQualityScore() != null) map.put("qualityScore", e.getQualityScore());
+                    if (e.getUnitPrice() != null) map.put("unitPrice", e.getUnitPrice());
                     return map;
                 })
                 .collect(Collectors.toList());
@@ -499,6 +500,7 @@ public class SupplyChainEventController {
         if (event.getTemperatureC() != null) map.put("temperatureC", event.getTemperatureC());
         if (event.getHumidityPercent() != null) map.put("humidityPercent", event.getHumidityPercent());
         if (event.getQualityScore() != null) map.put("qualityScore", event.getQualityScore());
+        if (event.getUnitPrice() != null) map.put("unitPrice", event.getUnitPrice());
         if (event.getNotes() != null) map.put("notes", event.getNotes());
         if (event.getEventType() != null) map.put("eventType", event.getEventType());
         map.put("actorId", event.getActorId());
