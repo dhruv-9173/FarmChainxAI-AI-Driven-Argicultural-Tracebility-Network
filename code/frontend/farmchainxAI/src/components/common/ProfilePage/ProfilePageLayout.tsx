@@ -446,7 +446,6 @@ export default function ProfilePageLayout({
             <div className={styles.fieldList}>
               {[
                 { label: "Password", value: "••••••••••••" },
-                { label: "Two-Factor Auth", value: "Not Enabled" },
                 { label: "Last Login", value: "Today" },
                 { label: "Account Status", value: "Active & Verified ✓" },
               ].map((r) => (

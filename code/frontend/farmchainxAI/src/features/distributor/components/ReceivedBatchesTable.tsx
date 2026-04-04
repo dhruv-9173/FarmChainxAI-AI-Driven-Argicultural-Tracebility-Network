@@ -4,8 +4,6 @@ import type {
   DistributorBatch,
   DistributorBatchStatus,
 } from "../types/distributor.types";
-import BatchDetailsModal from "../../../components/common/BatchDetailsModal";
-import type { BatchDetail } from "../../../components/common/BatchDetailsModal";
 import styles from "./ReceivedBatchesTable.module.css";
 
 interface Props {
@@ -62,7 +60,6 @@ export default function ReceivedBatchesTable({
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | DistributorBatchStatus>("All");
   const [page, setPage] = useState(1);
-  const [viewBatch, setViewBatch] = useState<DistributorBatch | null>(null);
 
   const filtered = batches.filter((b) => {
     const matchFilter = filter === "All" || b.status === filter;
@@ -204,18 +201,17 @@ export default function ReceivedBatchesTable({
                       </td>
                       <td>
                         <div className={styles.actions}>
-                          {/* View details â€” always visible */}
+                          {/* View details - always visible */}
                           <button
                             className={`${styles.actionBtn} ${styles.viewBtn}`}
-                            title="View Details & Supply Chain"
+                            title="Open QR Batch Page"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setViewBatch(batch);
+                              navigate(`/batch/${batch.id}`);
                             }}
                           >
                             <svg
-                              width="26"
-                              height="26"
+                              className={styles.viewIcon}
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -232,6 +228,7 @@ export default function ReceivedBatchesTable({
                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                               />
                             </svg>
+                            View
                           </button>
 
                           {(batch.status === "In Transit" ||
@@ -251,15 +248,15 @@ export default function ReceivedBatchesTable({
 
                           {batch.status === "In Transit" && (
                             <span className={styles.inTransitTag}>
-                              ðŸšš In Transit
+                              In Transit
                             </span>
                           )}
                           {(batch.status === "RECEIVED_BY_RETAIL" ||
                             batch.status === "REJECTED_BY_DIST") && (
                             <span className={styles.completedTag}>
                               {batch.status === "REJECTED_BY_DIST"
-                                ? "âœ— Rejected"
-                                : "âœ“ Done"}
+                                ? "Rejected"
+                                : "Completed"}
                             </span>
                           )}
                         </div>
@@ -280,7 +277,7 @@ export default function ReceivedBatchesTable({
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              â† Prev
+              Previous
             </button>
             <span className={styles.pageInfo}>
               Page {page} of {totalPages}
@@ -290,45 +287,11 @@ export default function ReceivedBatchesTable({
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next â†’
+              Next
             </button>
           </div>
         )}
       </div>
-
-      {viewBatch &&
-        (() => {
-          const detail: BatchDetail = {
-            id: viewBatch.id,
-            cropType: viewBatch.cropType,
-            variety: viewBatch.variety,
-            quantity: viewBatch.quantity,
-            qualityScore: viewBatch.qualityScore,
-            qualityGrade: viewBatch.qualityGrade,
-            shelfLifeDays: viewBatch.shelfLifeDays,
-            shelfLifePercent: viewBatch.shelfLifePercent,
-            organic: viewBatch.organic ?? false,
-            basePrice: viewBatch.basePrice,
-            marketPrice: viewBatch.marketPrice,
-            farmerName: viewBatch.farmerName,
-            farmerId: viewBatch.farmerId,
-            farmLocation: viewBatch.farmLocation,
-            status: viewBatch.status,
-            receivedAt: viewBatch.receivedAt,
-            transferredTo: viewBatch.transferredTo,
-            transferredAt: viewBatch.transferredAt,
-            recipientType: viewBatch.recipientType,
-            inspectionNote: viewBatch.inspectionNote,
-          };
-          return (
-            <BatchDetailsModal
-              batch={detail}
-              role="distributor"
-              accentColor="#2563EB"
-              onClose={() => setViewBatch(null)}
-            />
-          );
-        })()}
     </>
   );
 }

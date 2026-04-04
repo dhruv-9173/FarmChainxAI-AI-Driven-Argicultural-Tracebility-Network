@@ -221,9 +221,8 @@ export default function DistributorDashboard() {
         </div>
       </div>
 
-      <BatchPipelinePanel batches={batches} />
-
       <div className={styles.analyticsGrid}>
+        <BatchPipelinePanel batches={batches} />
         <DistributorAnalytics
           data={analyticsData}
           activities={activitiesData}
@@ -263,7 +262,11 @@ export default function DistributorDashboard() {
               </button>
             </div>
             <QCWorkflow
-              token={localStorage.getItem("token") || ""}
+              token={
+                localStorage.getItem("accessToken") ||
+                sessionStorage.getItem("accessToken") ||
+                ""
+              }
               onQCComplete={async () => {
                 // Refresh batches and analytics after successful QC so chart data stays live.
                 await Promise.all([loadBatches(), loadAnalyticsSection()]);

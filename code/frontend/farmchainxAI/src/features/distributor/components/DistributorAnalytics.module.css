@@ -1,8 +1,10 @@
 .card {
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border: 1px solid #e6ebf2;
+  border-radius: 18px;
   padding: 24px;
+  height: 100%;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
 }
 
 .header {
@@ -208,7 +210,22 @@
 }
 
 @media (max-width: 768px) {
+  .card {
+    padding: 18px;
+  }
+
   .predictionCards {
     grid-template-columns: 1fr;
+  }
+
+  .statsRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .statDivider {
+    width: 100%;
+    height: 1px;
   }
 }

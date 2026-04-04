@@ -1,33 +1,68 @@
 .page {
+  position: relative;
   min-height: 100vh;
-  background: #f9fafb;
+  overflow-x: hidden;
+  background: radial-gradient(
+      circle at 90% 2%,
+      rgba(37, 99, 235, 0.08) 0,
+      rgba(37, 99, 235, 0) 26%
+    ),
+    linear-gradient(180deg, #f7faff 0%, #f8fafc 60%, #f5f7fb 100%);
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  right: -140px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(37, 99, 235, 0.1) 0%,
+    rgba(37, 99, 235, 0) 72%
+  );
+  pointer-events: none;
 }
 
 .mainGrid {
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 24px;
-  padding: 28px 32px 0;
+  width: min(1440px, 100% - 48px);
+  margin: 0 auto;
+  padding: 28px 0 0;
 }
 
 .tableArea {
   min-width: 0;
+  animation: liftIn 0.35s ease-out;
 }
 
 .notifArea {
   min-width: 0;
+  animation: liftIn 0.45s ease-out;
 }
 
 .analyticsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  align-items: stretch;
   gap: 24px;
-  padding: 28px 32px 40px;
+  width: min(1440px, 100% - 48px);
+  margin: 0 auto;
+  padding: 28px 0 40px;
+  animation: liftIn 0.5s ease-out;
+}
+
+.analyticsGrid > * {
+  min-width: 0;
 }
 
 .receiptError {
-  margin: 12px 32px 0;
+  margin: 12px 0 0;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #fecaca;
@@ -108,16 +143,25 @@
 @media (max-width: 1200px) {
   .mainGrid {
     grid-template-columns: 1fr;
-    padding: 24px 16px 0;
+    width: min(1440px, 100% - 32px);
+    padding: 24px 0 0;
   }
 
   .analyticsGrid {
     grid-template-columns: 1fr;
-    padding: 24px 16px 40px;
+    width: min(1440px, 100% - 32px);
+    padding: 24px 0 40px;
   }
 
   .receiptError {
-    margin: 12px 16px 0;
+    margin: 12px 0 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .mainGrid,
+  .analyticsGrid {
+    width: min(1440px, 100% - 20px);
   }
 }
 
@@ -197,6 +241,17 @@
   from {
     opacity: 0;
     transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes liftIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
   to {
     opacity: 1;

@@ -2,7 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
+  width: min(1440px, 100% - 48px);
+  margin: 0 auto;
   margin-top: 24px;
 }
 
@@ -28,6 +29,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .primary,
@@ -36,9 +38,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
@@ -47,26 +49,26 @@
 }
 
 .primary {
-  background: #2563eb;
+  background: #1d4ed8;
   color: #fff;
 }
 
 .primary:hover {
-  background: #1d4ed8;
+  background: #1e40af;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.24);
 }
 
 .purple {
-  background: #f5f3ff;
-  color: #7c3aed;
-  border: 1px solid #ddd6fe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
 }
 
 .purple:hover {
-  background: #ede9fe;
+  background: #dbeafe;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.16);
 }
 
 .outline {
@@ -76,10 +78,10 @@
 }
 
 .outline:hover {
-  background: #f9fafb;
+  background: #f8fafc;
   border-color: #9ca3af;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
 }
 
 .badge {
@@ -102,7 +104,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    padding: 0 16px;
+    width: min(1440px, 100% - 20px);
   }
 
   .buttons {

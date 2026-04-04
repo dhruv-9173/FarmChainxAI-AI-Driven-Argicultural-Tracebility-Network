@@ -246,14 +246,31 @@ public class QualityCheckService {
         List<Batch> pendingQC;
 
         if (user.getRole() == User.UserRole.DISTRIBUTOR) {
-            pendingQC = batchRepository.findByDistributorId(userId).stream()
-                    .filter(b -> b.getStatus() == Batch.BatchStatus.RECEIVED_BY_DIST)
-                    .collect(Collectors.toList());
+            Map<String, Batch> pendingMap = new LinkedHashMap<>();
+
+            batchRepository.findByDistributorIdAndStatus(userId, Batch.BatchStatus.RECEIVED_BY_DIST)
+                .forEach(b -> pendingMap.put(b.getId(), b));
+
+            batchRepository
+                .findByCurrentOwnerIdAndCurrentOwnerRoleOrderByUpdatedAtDesc(userId, "DISTRIBUTOR")
+                .stream()
+                .filter(b -> b.getStatus() == Batch.BatchStatus.RECEIVED_BY_DIST)
+                .forEach(b -> pendingMap.put(b.getId(), b));
+
+            pendingQC = new ArrayList<>(pendingMap.values());
         } else if (user.getRole() == User.UserRole.RETAILER) {
-            // Retailer's received batches needing QC
-            pendingQC = batchRepository.findByRetailerId(userId).stream()
-                    .filter(b -> b.getStatus() == Batch.BatchStatus.RECEIVED_BY_RETAIL)
-                    .collect(Collectors.toList());
+            Map<String, Batch> pendingMap = new LinkedHashMap<>();
+
+            batchRepository.findByRetailerIdAndStatus(userId, Batch.BatchStatus.RECEIVED_BY_RETAIL)
+                .forEach(b -> pendingMap.put(b.getId(), b));
+
+            batchRepository
+                .findByCurrentOwnerIdAndCurrentOwnerRoleOrderByUpdatedAtDesc(userId, "RETAILER")
+                .stream()
+                .filter(b -> b.getStatus() == Batch.BatchStatus.RECEIVED_BY_RETAIL)
+                .forEach(b -> pendingMap.put(b.getId(), b));
+
+            pendingQC = new ArrayList<>(pendingMap.values());
         } else {
             pendingQC = Collections.emptyList();
         }

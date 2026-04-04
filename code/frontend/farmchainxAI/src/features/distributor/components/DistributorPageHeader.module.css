@@ -1,8 +1,15 @@
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  padding: 28px 32px 20px;
+  gap: 20px;
+  width: min(1440px, 100% - 48px);
+  margin: 0 auto;
+  padding: 24px 26px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
 .breadcrumb {
@@ -33,51 +40,75 @@
 
 .title {
   margin: 0;
-  font-size: 28px;
+  font-size: clamp(26px, 3.1vw, 32px);
   font-weight: 800;
-  color: #111827;
-  letter-spacing: -0.5px;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
   margin: 6px 0 0;
+  max-width: 760px;
   font-size: 15px;
-  color: #6b7280;
+  line-height: 1.55;
+  color: #64748b;
 }
 
 .right {
   flex-shrink: 0;
-  padding-top: 8px;
+  align-self: flex-start;
 }
 
 .healthBadge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 10px 16px;
   border-radius: 99px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  font-size: 13px;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   font-weight: 600;
-  color: #1e40af;
+  color: #166534;
 }
 
 .healthDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
   animation: pulse 2s infinite;
+}
+
+@media (max-width: 1200px) {
+  .header {
+    width: min(1440px, 100% - 32px);
+  }
+}
+
+@media (max-width: 840px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    width: min(1440px, 100% - 20px);
+    padding: 20px 18px;
+    border-radius: 18px;
+  }
+
+  .right {
+    align-self: auto;
+  }
 }
 
 @keyframes pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.08);
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.08);
   }
 }

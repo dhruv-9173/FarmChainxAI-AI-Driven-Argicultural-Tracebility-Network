@@ -2,21 +2,23 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  padding: 0 32px;
+  width: min(1440px, 100% - 48px);
+  margin: 0 auto;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #fdfefe);
+  border: 1px solid #e6ebf2;
+  border-radius: 18px;
   padding: 22px 24px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   cursor: default;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #cfe0ff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .cardTop {
@@ -62,12 +64,13 @@
 @media (max-width: 1024px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
-    padding: 0 16px;
+    width: min(1440px, 100% - 32px);
   }
 }
 
 @media (max-width: 640px) {
   .grid {
     grid-template-columns: 1fr;
+    width: min(1440px, 100% - 20px);
   }
 }
