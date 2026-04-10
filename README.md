@@ -7,7 +7,12 @@ This repository contains a **full-stack implementation** with:
 - **Frontend:** Vite + React + TypeScript (web UI)
 
 > This project is part of the **INFOSYS SPRINGBOARD INTERNSHIP — Java Batch 13**.
-
+> Visit the website through -> https://farm-chainx-ai-ai-driven-argicultur-rho.vercel.app/login
+> For Login use these test accounts:-
+>     farmer@gmail.com, Farmer@123
+>     distributer@gmail.com, Distrib@123
+>     retailer@gmail.com, Retail@123
+>     consumer@gmail.com, Consumer@123
 ---
 
 ## Repository Structure
