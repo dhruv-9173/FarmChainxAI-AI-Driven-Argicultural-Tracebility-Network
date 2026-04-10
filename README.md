@@ -162,6 +162,20 @@ If your backend runs on a different port/domain, you may need to:
 - Configure **CORS** in Spring Boot.
 
 ---
+## UI Screenshots
+<img width="1911" height="926" alt="Screenshot 2026-04-10 211328" src="https://github.com/user-attachments/assets/ccf1d222-07a9-40fe-82e9-e1ef820a03ea" />
+
+<img width="1919" height="920" alt="Screenshot 2026-04-10 211404" src="https://github.com/user-attachments/assets/4ff2cfe7-4cef-4cbc-9947-af15fd90e7db" />
+
+<img width="1918" height="930" alt="Screenshot 2026-04-10 211421" src="https://github.com/user-attachments/assets/2ffeb76b-80d4-41e0-8859-45443d384912" />
+
+<img width="1917" height="928" alt="Screenshot 2026-04-10 211552" src="https://github.com/user-attachments/assets/be2e50fc-62a0-4429-b351-96619ab5b006" />
+
+<img width="1917" height="925" alt="image" src="https://github.com/user-attachments/assets/d0be1fad-0cb6-454a-96b3-6ea8fb6ac24a" />
+
+<img width="1919" height="932" alt="image" src="https://github.com/user-attachments/assets/fe5eab3e-e1a7-416a-b28f-6b23b6ed1c49" />
+
+<img width="1919" height="930" alt="image" src="https://github.com/user-attachments/assets/678cd427-f893-40e6-ae7d-256019531902" />
 
 ## Documentation / Slides
 
